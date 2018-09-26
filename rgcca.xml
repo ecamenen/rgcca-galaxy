@@ -1,0 +1,32 @@
+<tool id="multiOmics_Toolbox" name="multiOmics_Toolbox" version="1.0">
+
+<description>performs multi-variate analysis (PCA, CCA, PLS, RGCCA) and projects the variables and samples into a bi-dimensional space.</description>
+
+<command><![CDATA[
+        Rscript /rgcca_galaxy.R
+        -d data/agriculture.tsv,data/industry.tsv,data/politic.tsv
+        --output1 $variables_space --output2 $samples_space --output3 $best_biomarkers
+    ]]></command>
+
+<inputs>
+<param type="data" name="input" label="Dataset" help="the first column should contains the individuals' names (e.g., identifier values to map on a network file), and the other, the variables (e.g., the individuals name in case of a a pseudo-distance matrix between metabolites among a network). Except for the first one, columns with characters values will be discarded from the analysis. NA values are not tolerated by the algorithms." format="tsv,tabular,txt,csv" />
+
+</inputs>
+
+<outputs>
+<data name="variables_space" label="variables_space.pdf" format="pdf" />
+<data name="samples_space" label="samples_space.pdf" format="pdf" />
+<data name="best_biomarkers" label="best_biomarkers.pdf" format="pdf" />
+</outputs>
+
+<help>
+
+</help>
+
+<citations>
+<citation type="doi">10.1093/nar/gky301</citation>
+<citation type="doi">10.1111/1467-9868.00293</citation>
+<citation type="doi">10.1016/0377-0427(87)90125-7</citation>
+
+</citations>
+</tool>
