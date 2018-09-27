@@ -7,10 +7,16 @@
     </macros>-->
 
 
-    <command interpreter="Rscript"><![CDATA[
-
-    galaxy_rgcca.R
-            -d "$__tool_directory__/data/agriculture.tsv,$__tool_directory__/data/industry.tsv,$__tool_directory__/data/politic.tsv"
+    <command ><![CDATA[
+    #set $data2 = $dataset[0].block.file_name
+    #for $i, $s in enumerate( $dataset )
+        #if $i > 0
+            #set $data2 += ',' + $s.block.file_name
+        #end if
+    #end for
+    echo "${data2}";
+    Rscript $__tool_directory__/galaxy_rgcca.R
+            -d "${data2}"
             --output1 $output1 --output2 $output2 --output3 $output3
 
     ]]></command>
@@ -20,9 +26,9 @@
     </inputs>
 
     <outputs>
-        <data name="output1" label="variables_space" format="pdf" />
-        <data name="output2" label="samples_space" format="pdf" />
-        <data name="output3"  label="best_biomarkers" format="pdf" />
+        <data name="output1" label="variables_space.pdf\" format="pdf" />
+        <data name="output2" label="samples_space.pdf" format="pdf" />
+        <data name="output3"  label="best_biomarkers.pdf" format="pdf" />
     </outputs>
 
     <help>

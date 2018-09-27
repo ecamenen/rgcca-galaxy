@@ -33,14 +33,12 @@ loadData = function(fi, fo=fi, row.names=NULL, h=F){
   #TODO: catch warning missing \n at the end of the file
 }
 
-save = function(f, p) ggsave(f, p, width=10, height=8)
-# save = function(f, p){
-#   x11()
-#   print(p)
-#   dev.print(pdf, f)
-# }
+save = function(f, p){
+  pdf(f, width=10, height=8)
+  plot(p)
+  suprLog = dev.off()
+}
 
-  
 setBlocks = function(){
   #create a list object of blocks from files loading
   
@@ -293,7 +291,7 @@ rgcca = rgcca(blocks,
 # Samples common space
 samples = data.frame(rgcca$Y[[length(blocks)]])
 samplesSpace = plotSpace(samples, "Samples", response, "Response", COMP1, COMP2)
-pdf(opt$output1, width=10, height=8); samplesSpace; suprLog = dev.off()
+save(opt$output1, samplesSpace)
 
 #attribution of block ID to each corresponding variable
 blocks_variables = rep( names(blocks)[-length(blocks)] , sapply(blocks[1:(length(blocks)-1)], NCOL))
@@ -309,9 +307,9 @@ variables =  data.frame(
 variablesSpace = plotSpace(variables, "Variables", variables[,3], "Blocks", COMP1, COMP2) + 
   geom_path(aes(x,y), data=circleFun(), col="grey", size=1) + 
   geom_path(aes(x,y), data=circleFun()/2, col="grey", size=1, lty=2)
-pdf(opt$output2, width=10, height=8); variablesSpace; suprLog = dev.off()
+save(opt$output2, variablesSpace)
 
 # Biomarkers plot
 biomarkers = data.frame(rgcca$a[[length(blocks)]], color=blocks_variables)
 best_biomarkers = plot_biomarkers(biomarkers, 1, 10)
-pdf(opt$output3, width=10, height=8); best_biomarkers; suprLog = dev.off()
+save(opt$output3, best_biomarkers)
