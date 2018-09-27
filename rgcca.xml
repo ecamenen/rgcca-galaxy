@@ -1,24 +1,18 @@
 <tool id="multiOmics_Toolbox" name="multiOmics_Toolbox" version="1.0">
 
-    <description>performs multi-variate analysis (PCA, CCA, PLS, RGCCA) and projects the variables and samples into a bi-dimensional space.</description>
+    <description>performs multi-variate analysis (PCA, CCA, PLS, RGCCA) and projects the variables and samples into a bi-dimensional space </description>
 
 <!--    <macros>
         <import>macros.xml</import>
     </macros>-->
 
-    <macros>
 
-        <xml name="study_metadata">
-            <section name="study_metadata" title="Study Overview Metadata">
-                <param name="title" type="text" label="Study Title" value="Study Title" help="e.g. Metabolomics study of the effect of ... on ..."/>
-            </section>
-        </xml>
-    </macros>
+    <command interpreter="Rscript"><![CDATA[
 
-    <command><![CDATA[
-        Rscript /rgcca_galaxy.R
-        -d '$inputs'
-        --output1 $variables_space --output2 $samples_space --output3 $best_biomarkers
+    galaxy_rgcca.R
+            -d "$__tool_directory__/data/agriculture.tsv,$__tool_directory__/data/industry.tsv,$__tool_directory__/data/politic.tsv"
+            --output1 $output1 --output2 $output2 --output3 $output3
+
     ]]></command>
 
     <inputs>
@@ -26,9 +20,9 @@
     </inputs>
 
     <outputs>
-        <data name="variables_space" label="variables_space.pdf" format="pdf" />
-        <data name="samples_space" label="samples_space.pdf" format="pdf" />
-        <data name="best_biomarkers" label="best_biomarkers.pdf" format="pdf" />
+        <data name="output1" label="variables_space" format="pdf" />
+        <data name="output2" label="samples_space" format="pdf" />
+        <data name="output3"  label="best_biomarkers" format="pdf" />
     </outputs>
 
     <help>

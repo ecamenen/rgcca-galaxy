@@ -19,8 +19,9 @@ rm(list=ls())
 
 getFileName = function(fi)  {
   #get prefix part from a file
-  fo = unlist(strsplit(fi, '[.]'))[1]
-  #TODO: split by "/"
+  fo = unlist(strsplit(fi, '/'))
+  fo = fo[length(fo)]
+  fo = unlist(strsplit(fo, '[.]'))[1]
 }
 
 loadData = function(fi, fo=fi, row.names=NULL, h=F){
@@ -32,8 +33,14 @@ loadData = function(fi, fo=fi, row.names=NULL, h=F){
   #TODO: catch warning missing \n at the end of the file
 }
 
-save = function(f, p)  ggsave(f, p, width=10, height=8)
+save = function(f, p) ggsave(f, p, width=10, height=8)
+# save = function(f, p){
+#   x11()
+#   print(p)
+#   dev.print(pdf, f)
+# }
 
+  
 setBlocks = function(){
   #create a list object of blocks from files loading
   
@@ -56,6 +63,7 @@ setBlocks = function(){
   
   return(blocks)
 }
+
 
 setConnection = function(){
   #default settings of connection_matrix matrix
@@ -199,6 +207,7 @@ checkFile = function (o){
 checkArg = function(a){
   opt = parse_args(a)
   
+  print(opt$datasets)
   if(is.null(opt$datasets)) stop(paste("--datasets is required\n", sep=""), call.=FALSE)
   
   if (is.null(opt$scheme)) opt$scheme = "factorial"
@@ -230,6 +239,8 @@ checkArg = function(a){
 #            MAIN
 ################################
 
+
+
 #Loading librairies
 librairies = c("RGCCA", "ggplot2", "ggrepel", "optparse", "scales")
 for (l in librairies){
@@ -258,7 +269,9 @@ tryCatch({
 })
 
 
+
 blocks = setBlocks()
+print(names(blocks))
 connection_matrix = setConnection()
 response = setResponse()
 NB_COMP = sapply(blocks, NCOL)
@@ -280,7 +293,7 @@ rgcca = rgcca(blocks,
 # Samples common space
 samples = data.frame(rgcca$Y[[length(blocks)]])
 samplesSpace = plotSpace(samples, "Samples", response, "Response", COMP1, COMP2)
-save(opt$output1, samplesSpace)
+pdf(opt$output1, width=10, height=8); samplesSpace; suprLog = dev.off()
 
 #attribution of block ID to each corresponding variable
 blocks_variables = rep( names(blocks)[-length(blocks)] , sapply(blocks[1:(length(blocks)-1)], NCOL))
@@ -296,9 +309,9 @@ variables =  data.frame(
 variablesSpace = plotSpace(variables, "Variables", variables[,3], "Blocks", COMP1, COMP2) + 
   geom_path(aes(x,y), data=circleFun(), col="grey", size=1) + 
   geom_path(aes(x,y), data=circleFun()/2, col="grey", size=1, lty=2)
-save(opt$output2, variablesSpace)
+pdf(opt$output2, width=10, height=8); variablesSpace; suprLog = dev.off()
 
 # Biomarkers plot
-biomarkers = data.frame(rgcca$a[[4]], color=blocks_variables)
+biomarkers = data.frame(rgcca$a[[length(blocks)]], color=blocks_variables)
 best_biomarkers = plot_biomarkers(biomarkers, 1, 10)
-save(opt$output3, best_biomarkers)
+pdf(opt$output3, width=10, height=8); best_biomarkers; suprLog = dev.off()
