@@ -8,23 +8,16 @@
 
 
     <command ><![CDATA[
-    #set $size = len ($dataset)
-    #if $size > 0
-        #set $data_paths = $dataset[0].block.file_name
-        #set $data_names = $dataset[0].block.name
+        #set $data_paths = $block_1.file_name
+        #set $data_names = $block_1.name
         #for $i, $s in enumerate( $dataset )
-            #if $i > 0
-                #set $data_paths += ',' + $s.block.file_name
-                #set $data_names += ',' + $s.block.name
-            #end if
+                #set $data_paths += ',' + $s.block_n.file_name
+                #set $data_names += ',' + $s.block_n.name
         #end for
         Rscript $__tool_directory__/galaxy_rgcca.R
                 -d "${$data_paths}"
                 -n "${$data_names}"
                 --output1 $output1 --output2 $output2 --output3 $output3
-    #else
-        echo "Select at least one file for the analysis"; exit 1;
-    #end if
     ]]></command>
 
     <stdio>
@@ -32,6 +25,10 @@
     </stdio>
 
     <inputs>
+    <param name="block_1" type="data" format="tsv,tabular,txt,csv" label="Dataset" help="the first column should co" />
+    <repeat name="dataset" title="New block dataset">
+        <param name="block_n" type="data" format="tsv,tabular,txt,csv" label="Block file"/>
+    </repeat>
 
     </inputs>
 
