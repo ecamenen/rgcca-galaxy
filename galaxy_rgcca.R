@@ -39,20 +39,28 @@ save = function(f, p){
   suprLog = dev.off()
 }
 
+parseList = function(l){
+  #l: string of characters separated by ,
+  #out: vector
+  #remove white space
+  l = gsub(" ", "", l)
+  #split by ,
+  unlist(strsplit(l, ","))
+}
+  
 setBlocks = function(){
   #create a list object of blocks from files loading
   
-  #remove white space
-  opt$datasets = gsub(" ", "", opt$datasets)
-  #split by ,
-  blocksName = unlist(strsplit(opt$datasets, ","))
+  blocksFilename = parseList(opt$datasets)
+  if(!is.null(opt$names)) blocksName = parseList(opt$names)
   
   #load each dataset
   blocks = list()
-  for (i in 1:length(blocksName)){
-    fi = blocksName[i]
+  for (i in 1:length(blocksFilename)){
+    fi = blocksFilename[i]
     checkFile(fi)
-    fo = getFileName(fi)
+    if(!is.null(opt$names)) fo = getFileName(blocksName[i])
+    else fo = getFileName(fi)
     loadData(fi, fo, 1, T)
     blocks[[fo]] = get(fo)
     if (NCOL(blocks[[fo]]) ==0) stop(paste(fo, "block file has an only-column. Check the --separator [by default: 1 for tabulation].\n"), call.=FALSE)
@@ -61,7 +69,6 @@ setBlocks = function(){
   
   return(blocks)
 }
-
 
 setConnection = function(){
   #default settings of connection_matrix matrix
@@ -177,6 +184,7 @@ getArgs = function(){
     make_option(c("-d", "--datasets"), type="character", metavar="character", default = "data/agriculture.tsv,data/industry.tsv,data/politic.tsv", help="Bloc files name"),
     make_option(c("-c", "--connection"), type="character", metavar="character", help="Connection file name"),
     make_option(c("-r", "--response"), type="character", metavar="character", help="Response file name"),
+    make_option(c("-n", "--names"), type="character", metavar="character", default = "agri2.tsv,indus2.tsv,pol2.tsv", help="Names of the blocks [default: filename]"),
     make_option(c("-s", "--separator"), type="integer", metavar="integer", default=1,
                 help="Type of separator [default: tabulation] (1: Tabulation, 2: Semicolon, 3: Comma"),
     make_option(c("-g", "--scheme"), type="integer", metavar="integer", default=2,
@@ -205,7 +213,6 @@ checkFile = function (o){
 checkArg = function(a){
   opt = parse_args(a)
   
-  print(opt$datasets)
   if(is.null(opt$datasets)) stop(paste("--datasets is required\n", sep=""), call.=FALSE)
   
   if (is.null(opt$scheme)) opt$scheme = "factorial"

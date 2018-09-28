@@ -8,17 +8,18 @@
 
 
     <command ><![CDATA[
-    #set $data2 = $dataset[0].block.file_name
+    #set $data_paths = $dataset[0].block.file_name
+    #set $data_names = $dataset[0].block.name
     #for $i, $s in enumerate( $dataset )
         #if $i > 0
-            #set $data2 += ',' + $s.block.file_name
+            #set $data_paths += ',' + $s.block.file_name
+            #set $data_names += ',' + $s.block.name
         #end if
     #end for
-    echo "${data2}";
     Rscript $__tool_directory__/galaxy_rgcca.R
-            -d "${data2}"
+            -d "${$data_paths}"
+            -n "${$data_names}"
             --output1 $output1 --output2 $output2 --output3 $output3
-
     ]]></command>
 
     <inputs>
