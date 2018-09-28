@@ -181,10 +181,10 @@ plot_biomarkers = function(df, comp, n){
 #TODO: remove default files
 getArgs = function(){
   option_list = list(
-    make_option(c("-d", "--datasets"), type="character", metavar="character", default = "data/agriculture.tsv,data/industry.tsv,data/politic.tsv", help="Bloc files name"),
+    make_option(c("-d", "--datasets"), type="character", metavar="character", help="Bloc files name"),
     make_option(c("-c", "--connection"), type="character", metavar="character", help="Connection file name"),
     make_option(c("-r", "--response"), type="character", metavar="character", help="Response file name"),
-    make_option(c("-n", "--names"), type="character", metavar="character", default = "agri2.tsv,indus2.tsv,pol2.tsv", help="Names of the blocks [default: filename]"),
+    make_option(c("-n", "--names"), type="character", metavar="character", help="Names of the blocks [default: filename]"),
     make_option(c("-s", "--separator"), type="integer", metavar="integer", default=1,
                 help="Type of separator [default: tabulation] (1: Tabulation, 2: Semicolon, 3: Comma"),
     make_option(c("-g", "--scheme"), type="integer", metavar="integer", default=2,
@@ -276,7 +276,6 @@ tryCatch({
 
 
 blocks = setBlocks()
-print(names(blocks))
 connection_matrix = setConnection()
 response = setResponse()
 NB_COMP = sapply(blocks, NCOL)

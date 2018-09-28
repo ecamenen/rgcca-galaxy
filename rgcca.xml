@@ -18,6 +18,18 @@
              -d "${$data_paths}"
              -n "${$data_names}"
              --output1 $samples_space --output2 $variables_space --output3 $best_biomarkers
+             #if $parse.advanced
+                -s $parse.separator
+             #end if
+             #if $analyse.advanced
+                -g $analyse.scheme
+                #if $analyse.connection.bool
+                    -c $analyse.connection.file
+                #end if
+                #if $analyse.response.bool
+                    -r $analyse.response.file
+                #end if
+             #end if
     ]]></command>
 
     <stdio>
@@ -33,6 +45,47 @@
             (should have an header)" >
         <param name="block_n" type="data" format="tsv,tabular,txt,csv" label="Dataset" />
     </repeat>
+
+        <conditional name="parse">
+            <param name="advanced" type="boolean" label="Change parsing of the fingerprint dataset parameters (by default, on tabulated file with an header)"/>
+            <when value="true">
+                <param name="separator" type="select" display="radio" label="Column separator" help="Character used to separate the column in the fingerprint dataset (by default: tabulation). ">
+                    <option value="1" selected="true">Tabulation</option>
+                    <option value="2">Semicolon</option>
+                </param>
+            </when>
+        </conditional>
+
+        <conditional name="analyse">
+            <param name="advanced" type="boolean" label="Customize analysis settings."/>
+            <when value="true">
+                <conditional name="connection">
+                    <param name="bool" type="boolean"
+                           label="Modifiy the design matrix (that describes the relationships between blocks)" help="By default, "/>
+                    <when value="true">
+                        <param name="file" type="data" format="tsv,tabular,txt,csv" label="Design matrix"
+                               help="Its dimension should be (NB_BLOCKS + 1) * (NB_BLOCKS + 1). + 1 corresponds for the use of a supplementary block
+                               (the 'superblock'), a concatenation of all the blocks helpful to interpret the results. By default, the connection matrix
+                               is build with 1 values for the last line (and column) except for the diagonal (i.e., the superblock is fully connected
+                               with the other blocks) and 0 values for the other cells (the blocks are not connected together). To go further than his
+                               null hypothesis, a priori information could be used to tune the matrix (e.g., add 1 value for a connection between two block)." />
+                    </when>
+                </conditional>
+                <conditional name="response">
+                    <param name="bool" type="boolean" label="Color the samples according to their group of response"/>
+                    <when value="true">
+                        <param name="file" type="data" format="tsv,tabular,txt,csv" label="Groups of response"
+                               help="File containing an only column of a qualitative variable." />
+                    </when>
+                </conditional>
+                <param name="scheme" type="select" label="Scheme function" help="Unlike the others, Euclidean and Manhattan are non binary distances.">
+                    <option value="1">Horst : f(x) </option>
+                    <option value="2" selected="true">Factorial : f(x)^2 </option>
+                    <option value="3">Centroid : f|x| </option>
+                    <option value="4">Other: f(x)^4</option>
+                </param>
+            </when>
+        </conditional>
 
     </inputs>
 
