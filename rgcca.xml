@@ -8,19 +8,28 @@
 
 
     <command ><![CDATA[
-    #set $data_paths = $dataset[0].block.file_name
-    #set $data_names = $dataset[0].block.name
-    #for $i, $s in enumerate( $dataset )
-        #if $i > 0
-            #set $data_paths += ',' + $s.block.file_name
-            #set $data_names += ',' + $s.block.name
-        #end if
-    #end for
-    Rscript $__tool_directory__/galaxy_rgcca.R
-            -d "${$data_paths}"
-            -n "${$data_names}"
-            --output1 $output1 --output2 $output2 --output3 $output3
+    #set $size = len ($dataset)
+    #if $size > 0
+        #set $data_paths = $dataset[0].block.file_name
+        #set $data_names = $dataset[0].block.name
+        #for $i, $s in enumerate( $dataset )
+            #if $i > 0
+                #set $data_paths += ',' + $s.block.file_name
+                #set $data_names += ',' + $s.block.name
+            #end if
+        #end for
+        Rscript $__tool_directory__/galaxy_rgcca.R
+                -d "${$data_paths}"
+                -n "${$data_names}"
+                --output1 $output1 --output2 $output2 --output3 $output3
+    #else
+        echo "Select at least one file for the analysis"; exit 1;
+    #end if
     ]]></command>
+
+    <stdio>
+        <exit_code range="1" level="fatal" description="" />
+    </stdio>
 
     <inputs>
 
