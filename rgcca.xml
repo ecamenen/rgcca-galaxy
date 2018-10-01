@@ -52,7 +52,7 @@
         </conditional>
 
         <conditional name="analyse">
-            <param name="advanced" type="boolean" label="Customize analysis settings."/>
+            <param name="advanced" type="boolean" label="Customize analysis settings"/>
             <when value="true">
                 <conditional name="connection">
                     <param name="bool" type="boolean"
@@ -100,15 +100,17 @@
 ABOUT
 ==================================
 
-.. class:: infomark
 
-**author** Arthur TENENHAUS, Vincent GUILLEMOT, Etienne CAMENEN
+**Authors:**
+Arthur TENENHAUS, Vincent GUILLEMOT, Etienne CAMENEN
 
----------------------------------------------------
 
-.. class:: infomark
+**Contact:**
+arthur.tenenhaus@l2s.centralesupelec.fr
 
-**website** https://cran.r-project.org/web/packages/rgcca/index.html
+
+**R package:**
+The RGCCA package is available from the CRAN repository (https://cran.r-project.org/web/packages/RGCCA).
 
 ---------------------------------------------------
 
@@ -116,9 +118,7 @@ ABOUT
 MULTI-OMICS TOOLBOX
 ==================================
 
-------------
-Description
-------------
+**Description**
 
 We consider J data matrices X1 ,..., XJ.  Each n × pj data matrix Xj = [ xj1, ..., xjpj ] is called a block and represents a set
 of pj variables observed on n individuals. The number and the nature of the variables may differ from one block to another,
@@ -129,20 +129,22 @@ components explain well their own block and/or (ii) block components that are as
 As a component-based method, RGCCA can provide users with graphical representations to visualize the sources
 of variability within blocks and the amount of correlation between blocks.
 
+**Input file**
 
-**Input files**
-    (for examples see https://gitlab.icm-institute.org/etienne.camenen/rgcca_galaxy/tree/feature/proofConcept/data)
+- *blocks* (.tsv, .csv or .txt) : tabulated files containing variables to analyse together. The samples should be in lines and labelled and variables in columns with an header.
+- *connection* (.tsv, .csv or .txt) : tabulated files without header, containing a symmetric matrix with either 0 or 1 for a connection between each blocks.
+- *response* (.tsv, .csv or .txt) : an only column of a qualitative variable.
 
-    - blocks (.tsv or .txt) : tabulated files containing variables to analyse together. The samples should be in lines and labelled and variables in columns with an header.
-    - connection (.tsv or .txt) : tabulated files without header, containing a symmetric matrix with either 0 or 1 for a connection between each blocks.
-    - response (.tsv or .txt) : an only column of a qualitative variable.
+**Working example**
 
+    | From Russett data (RGCCA package) : https://gitlab.icm-institute.org/etienne.camenen/rgcca_galaxy/tree/feature/proofConcept/data
+    | Use *agriculture.tsv* as dataset. Add *industry.tsv* and *politic.tsv* as new dataset. Eventually, use *response.tsv* as group of response in analysis custom settings.
 
-    **Output files**
+**Output files**
 
-- variables_space (.pdf or .png) : samples projected in a space composed by the first two component of the analysis (with the percent of explained variance). By selecting a response, samples are colored according to this criterion.
-- samples_space (.pdf or .png) : circle of correlation of variables with the first two component of the analysis (with the percent of  explained variance). The dotted circle corresponds to a 0.5 correlation and the full one corresponds to a 1 correlation.
-- best_biomarkers (.pdf or .png) : 10 best biomarkers for a set of blocks according to the weight of these variables in the analysis (eigen value for PCA, canonical variable for CCA, component for PLS and RGCCA).
+- *variables_space* (.pdf) : samples projected in a space composed by the first two component of the analysis (with the percent of explained variance). By selecting a response, samples are colored according to this criterion.
+- *samples_space* (.pdf) : circle of correlation of variables with the first two component of the analysis (with the percent of  explained variance). The dotted circle corresponds to a 0.5 correlation and the full one corresponds to a 1 correlation.
+- *best_biomarkers* (.pdf) : 10 best biomarkers for a set of blocks according to the weight of these variables in the analysis (eigen value for PCA, canonical variable for CCA, component for PLS and RGCCA).
 
 <![CDATA[
 
@@ -155,10 +157,8 @@ of variability within blocks and the amount of correlation between blocks.
 </help>
 
     <citations>
-        <citation type="doi">10.1093/nar/gky301</citation>
-        <citation type="doi">10.1111/1467-9868.00293</citation>
-        <citation type="doi">10.1016/0377-0427(87)90125-7</citation>
-
+        <citation type="doi">10.1007/s11336-017-9573-x</citation>
+        <citation type="doi">10.1007/s11336-011-9206-8</citation>
     </citations>
 
 </tool>

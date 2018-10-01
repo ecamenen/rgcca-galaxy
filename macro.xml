@@ -21,13 +21,6 @@
             :target: https://gitlab.icm-institute.org/etienne.camenen/rgcca_galaxy/raw/feature/proofConcept/img/best_biomarkers.png
 ]]></token>
 
-    <token name="@SAMPLES_TXT@"><![CDATA[
-- samples_space (.pdf or .png) : circle of correlation of variables with the first two component of the analysis (with the percent of  explained variance). The dotted circle corresponds to a 0.5 correlation and the full one corresponds to a 1 correlation.
-]]></token>
-
-    <token name="@BIOMARKERS_TXT@"><![CDATA[
-- best_biomarkers (.pdf or .png) : 10 best biomarkers for a set of blocks according to the weight of these variables in the analysis (eigen value for PCA, canonical variable for CCA, component for PLS and RGCCA).
-]]></token>
 
 </macros>
 
