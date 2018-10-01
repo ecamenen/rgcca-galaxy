@@ -1,16 +1,33 @@
 <macros>
 
-    <xml name="configfiles">
-        <configfiles>
-            <inputs name="inputs" />
-        </configfiles>
-    </xml>
+    <token name="@VARIABLES_IMG@"><![CDATA[
+.. image:: https://gitlab.icm-institute.org/etienne.camenen/rgcca_galaxy/raw/feature/proofConcept/img/variables_space.png
+            :height: 400
+            :width: 500
+            :target: https://gitlab.icm-institute.org/etienne.camenen/rgcca_galaxy/raw/feature/proofConcept/img/variables_space.png
+]]></token>
 
-    <xml name="study_metadata">
-        <section name="study_metadata" title="Study Overview Metadata">
-            <param name="title" type="text" label="Study Title" value="Study Title" help="e.g. Metabolomics study of the effect of ... on ..."/>
-        </section>
-    </xml>
+    <token name="@SAMPLES_IMG@"><![CDATA[
+.. image:: https://gitlab.icm-institute.org/etienne.camenen/rgcca_galaxy/raw/feature/proofConcept/img/samples_space.png
+            :height: 400
+            :width: 500
+            :target: https://gitlab.icm-institute.org/etienne.camenen/rgcca_galaxy/raw/feature/proofConcept/img/samples_space.png
+]]></token>
+
+    <token name="@BIOMARKERS_IMG@"><![CDATA[
+.. image:: https://gitlab.icm-institute.org/etienne.camenen/rgcca_galaxy/raw/feature/proofConcept/img/best_biomarkers.png
+            :height: 400
+            :width: 500
+            :target: https://gitlab.icm-institute.org/etienne.camenen/rgcca_galaxy/raw/feature/proofConcept/img/best_biomarkers.png
+]]></token>
+
+    <token name="@SAMPLES_TXT@"><![CDATA[
+- samples_space (.pdf or .png) : circle of correlation of variables with the first two component of the analysis (with the percent of  explained variance). The dotted circle corresponds to a 0.5 correlation and the full one corresponds to a 1 correlation.
+]]></token>
+
+    <token name="@BIOMARKERS_TXT@"><![CDATA[
+- best_biomarkers (.pdf or .png) : 10 best biomarkers for a set of blocks according to the weight of these variables in the analysis (eigen value for PCA, canonical variable for CCA, component for PLS and RGCCA).
+]]></token>
 
 </macros>
 
