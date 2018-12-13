@@ -110,7 +110,12 @@ setBlocks = function() {
 
   if (length(unique(sapply(1:length(blocks), function(x) NROW(blocks[[x]])))) > 1)
     stop("The number of rows is different among the blocks.\n", call. = FALSE)
-  blocks[["Superblock"]] = Reduce(cbind, blocks)
+  #print(names(blocks[[3]])[99])
+  #blocks[[3]] = blocks[[3]][, -99]
+
+  if( SUPERBLOCK )
+    blocks[["Superblock"]] = Reduce(cbind, blocks)
+  #blocks[["Superblock"]] = blocks[["Superblock"]][, -242]
 
   return(blocks)
 }
@@ -186,6 +191,8 @@ isCharacter = function(df) {
   # function NA are produced by converting a character into an integer
   # as.vector, avoid factors of character in integer without NA
 
+  # NA tolerance :
+  # df = na.omit(df)
   if (is.matrix(df))
     test = sapply(1:NCOL(df), function(x) unique(is.na(as.integer(as.vector(df[, x])))))
   else

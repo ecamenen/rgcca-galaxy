@@ -19,7 +19,7 @@ rm(list=ls())
 
 getArgs = function(){
   option_list = list(
-    make_option(c("-d", "--datasets"), type="character", metavar="character", help="Path of the blocks", default = "Clinique.tsv,Imagerie.tsv,Lipidomique.tsv,Metabolomique.tsv,Transcriptomique.tsv"),
+    make_option(c("-d", "--datasets"), type="character", metavar="character", help="Path of the blocks", default = "data2/Clinique.tsv,data2/Lipidomique.tsv,data2/Transcriptomique.tsv,data2/Imagerie.tsv,data2/Metabolomique.tsv"),
     make_option(c("-w", "--directory"), type="character", metavar="character", help="Path of the scripts directory (for Galaxy)", default="."),
     make_option(c("-c", "--connection"), type="character", metavar="character", help="Connection file path"),
     make_option(c("-r", "--response"), type="character", metavar="character", help="Response file path"),
@@ -75,7 +75,6 @@ checkArg = function(a){
   return (opt)
 }
 
-
 checkFile = function (f){
   # o: one argument from the list of arguments
   if(!file.exists(f)){
@@ -115,13 +114,15 @@ DISJUNCTIVE = F
 COMP1 = 1
 COMP2 = 2
 AXIS_TITLE_SIZE = 19
-AXIS_TEXT_SIZE = 10
+AXIS_TEXT_SIZE = 8
+PCH_TEXT_SIZE = 2
 AXIS_FONT = "italic"
 MAX_CLUSTERS = 10
 COLOR_SAMPLES_DEF = "#000099"
 HEADER = !("header" %in% names(opt))
 MSG_HEADER = " Possible mistake: header parameter is disabled, check if the file does'nt have one."
-
+NB_MARK = 100
+SUPERBLOCK = T
 
 setwd(opt$directory)
 source("R/parsing.R")
@@ -130,42 +131,36 @@ source("R/plot.R")
 blocks = setBlocks()
 connection_matrix = setConnection()
 response = setResponse()
-NB_COMP = sapply(blocks, NCOL)
+NB_COMP = 2
+ncomp = rep(NB_COMP, length(blocks))
+#sapply(blocks, NCOL)
 # TODO: Error in rgcca(blocks, connection_matrix, tau = TAU, scheme = scheme, ncomp = rep(NB_COMP,  :
 #                                                                     For each block, choose a number of components smaller than the number of variables!
 
-rgcca = rgcca(blocks,
-              connection_matrix,
-              tau = TAU,
+getColumnSameVal = function(list_m)
+  lapply(1:length(list_m), function (x) which( apply(list_m[[x]], 2, sd ) == 0 ))
+#getColumnSameVal(blocks)
+
+rsgcca.res = sgcca(A = blocks,
+              C = connection_matrix,
               scheme = opt$scheme,
-              ncomp = NB_COMP,
+              ncomp = ncomp,
               scale = SCALE,
               verbose = VERBOSE)
-#ncomp = rep(NB_COMP, length(blocks))
 
 # Samples common space
-samples = data.frame(rgcca$Y[[length(blocks)]])
-samplesSpace = plotSpace(samples, "Samples", response, "Response", COMP1, COMP2)
-if (is.null(opt$response)) samplesSpace = samplesSpace + theme(legend.position = "none")
+( samplesSpace = plotSamplesSpace(rsgcca.res, COMP1, COMP2) )
+plotSamplesSpace(rsgcca.res, COMP1, COMP2, 1)
 save(opt$output1, samplesSpace)
 
-#attribution of block ID to each corresponding variable
-blocks_variables = rep( names(blocks)[-length(blocks)] , sapply(blocks[1:(length(blocks)-1)], NCOL))
-
 # Variables common space
-variables =  data.frame(
- #correlation matrix with superblock for each variables and each component selected
- sapply ( c(COMP1:COMP2), function(x) cor( blocks[["Superblock"]], rgcca$Y[[length(blocks)]][, x] ) ) ,
- blocks_variables,
- row.names = colnames(blocks[["Superblock"]])
-)
-
-variablesSpace = plotSpace(variables, "Variables", variables[,3], "Blocks", COMP1, COMP2) +
-  geom_path(aes(x,y), data=circleFun(), col="grey", size=1) +
-  geom_path(aes(x,y), data=circleFun()/2, col="grey", size=1, lty=2)
+( variablesSpace = plotVariablesSpace(rsgcca.res, COMP1, COMP2) )
+plotVariablesSpace(rsgcca.res, COMP1, COMP2, 2)
 save(opt$output2, variablesSpace)
 
 # Biomarkers plot
-biomarkers = data.frame(rgcca$a[[length(blocks)]], color = blocks_variables)
-best_biomarkers = plot_biomarkers(biomarkers, 1, 10)
+( best_biomarkers = plot_biomarkers(rsgcca.res, COMP1, NB_MARK) )
+plot_biomarkers(rsgcca.res, COMP1, NB_MARK, 2)
 save(opt$output3, best_biomarkers)
+
+plotAVE(rsgcca.res, COMP1)

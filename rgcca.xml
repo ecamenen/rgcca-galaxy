@@ -145,7 +145,7 @@ of variability within blocks and the amount of correlation between blocks.
 
 - *variables_space* (.pdf) : samples projected in a space composed by the first two component of the analysis (with the percent of explained variance). By selecting a response, samples are colored according to this criterion.
 - *samples_space* (.pdf) : circle of correlation of variables with the first two component of the analysis (with the percent of  explained variance). The dotted circle corresponds to a 0.5 correlation and the full one corresponds to a 1 correlation.
-- *best_biomarkers* (.pdf) : 10 best biomarkers for a set of blocks according to the weight of these variables in the analysis (eigen value for PCA, canonical variable for CCA, component for PLS and RGCCA).
+- *best_biomarkers* (.pdf) : 100 best biomarkers for a set of blocks according to the weight of these variables in the analysis (eigen value for PCA, canonical variable for CCA, component for PLS and RGCCA).
 
 <![CDATA[
 
