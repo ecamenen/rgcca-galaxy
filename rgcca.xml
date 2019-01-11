@@ -15,11 +15,11 @@
         #end for
         Rscript $__tool_directory__/R/launcher.R
              -d "${$data_paths}"
-             -n "${$data_names}"
+             --names "${$data_names}"
              -w $__tool_directory__
              --output1 $samples_space --output2 $variables_space --output3 $best_biomarkers
              #if $parse.advanced
-                -s $parse.separator
+                --separator $parse.separator
              #end if
              #if $analyse.advanced
                 -g $analyse.scheme
