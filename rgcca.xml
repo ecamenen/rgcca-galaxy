@@ -17,12 +17,19 @@
              -d "${$data_paths}"
              --names "${$data_names}"
              -w $__tool_directory__
-             --output1 $samples_space --output2 $variables_space --output3 $best_biomarkers
+             --output1 $samples_space --output2 $corcircle --output3 $fingerprint --output4 $ave
              #if $parse.advanced
+                $parse.header
                 --separator $parse.separator
              #end if
              #if $analyse.advanced
+                $analyse.superblock
+                $analyse.scale
+                $analyse.bias
+                -t $analyse.tau
+                --ncomp $analyse.ncomp
                 -g $analyse.scheme
+                --init $analyse.init
                 #if $analyse.connection.bool
                     -c $analyse.connection.file
                 #end if
@@ -45,6 +52,7 @@
         <conditional name="parse">
             <param name="advanced" type="boolean" label="Customize parsing of the fingerprint dataset parameters (by default, on tabulated file)"/>
             <when value="true">
+                <param name="header" type="boolean" truevalue="" falsevalue="-H" checked="true" label="Consider first row as header of columns"/>
                 <param name="separator" type="select" display="radio" label="Column separator" help="Character used to separate the column in the dataset (by default: tabulation). ">
                     <option value="1" selected="true">Tabulation</option>
                     <option value="2">Semicolon</option>
@@ -76,6 +84,11 @@
                                help="File containing an only column of a qualitative variable." />
                     </when>
                 </conditional>
+                <param name="superblock" type="boolean" truevalue="" falsevalue="--superblock" checked="true" label="Used a superblock."/>
+                <param name="scale" type="boolean" truevalue="" falsevalue="--scale" checked="true" label="Standardized to zero means and unit variances and then divided by the square root of its number of variables."/>
+                <param name="bias" type="boolean" truevalue="" falsevalue="--bias" checked="true" label="Used a biaised estimator of the var/cov."/>
+                <param name="tau" type="float" label="Tau parameter in RGCCA" value="1" min="0" max="1" />
+                <param name="ncomp" type="integer" label="Number of component" help="Number of component to use in RGCCA algorithm." value="2" min="2" max="5" />
                 <param name="scheme" type="select" label="Scheme function" help="Choices of scheme function are the identity (horst scheme, leading
                 to maximizing the sum of covariances between block components), the absolute value (centroid scheme, yielding maximization of the sum
                 of the absolute values of the covariances), the square function (factorial scheme, thereby maximizing the sum of squared covariances),
@@ -85,6 +98,10 @@
                     <option value="3">Centroid : f|x| </option>
                     <option value="4">Other: f(x)^4</option>
                 </param>
+                <param name="init" type="select" label="Initialization mode" help="The mode of initialization to use in RGCCA algorithm.">
+                    <option value="1" selected="true">Singular Value Decompostion</option>
+                    <option value="2">Random</option>
+                </param>
             </when>
         </conditional>
 
@@ -92,8 +109,9 @@
 
     <outputs>
         <data name="samples_space" label="samples_space.pdf" format="pdf" />
-        <data name="variables_space" label="variables_space.pdf" format="pdf" />
-        <data name="best_biomarkers"  label="best_biomarkers.pdf" format="pdf" />
+        <data name="corcircle" label="corcircle.pdf" format="pdf" />
+        <data name="fingerprint"  label="fingerprint.pdf" format="pdf" />
+        <data name="ave"  label="ave.pdf" format="pdf" />
     </outputs>
 <help>
 
@@ -143,9 +161,9 @@ of variability within blocks and the amount of correlation between blocks.
 
 **Output files**
 
-- *variables_space* (.pdf) : samples projected in a space composed by the first two component of the analysis (with the percent of explained variance). By selecting a response, samples are colored according to this criterion.
+- *corcircle* (.pdf) : samples projected in a space composed by the first two component of the analysis (with the percent of explained variance). By selecting a response, samples are colored according to this criterion.
 - *samples_space* (.pdf) : circle of correlation of variables with the first two component of the analysis (with the percent of  explained variance). The dotted circle corresponds to a 0.5 correlation and the full one corresponds to a 1 correlation.
-- *best_biomarkers* (.pdf) : 100 best biomarkers for a set of blocks according to the weight of these variables in the analysis (eigen value for PCA, canonical variable for CCA, component for PLS and RGCCA).
+- *fingerprint* (.pdf) : 100 best biomarkers for a set of blocks according to the weight of these variables in the analysis (eigen value for PCA, canonical variable for CCA, component for PLS and RGCCA).
 
 <![CDATA[
 
