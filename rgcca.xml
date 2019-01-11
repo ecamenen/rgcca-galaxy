@@ -37,6 +37,11 @@
                     -r $analyse.response.file
                 #end if
              #end if
+             #if $graphic.advanced
+                --compx $graphic.compx
+                --compy $graphic.compy
+                --nmark $graphic.nmark
+             #end if
     ]]></command>
 
     <inputs>
@@ -50,7 +55,7 @@
     </repeat>
 
         <conditional name="parse">
-            <param name="advanced" type="boolean" label="Customize parsing of the fingerprint dataset parameters (by default, on tabulated file)"/>
+            <param name="advanced" type="boolean" label="Customize parsing of the files" help="By default, on a tabulated file with an header."/>
             <when value="true">
                 <param name="header" type="boolean" truevalue="" falsevalue="-H" checked="true" label="Consider first row as header of columns"/>
                 <param name="separator" type="select" display="radio" label="Column separator" help="Character used to separate the column in the dataset (by default: tabulation). ">
@@ -61,7 +66,8 @@
         </conditional>
 
         <conditional name="analyse">
-            <param name="advanced" type="boolean" label="Customize analysis settings"/>
+            <param name="advanced" type="boolean" label="Customize analysis settings"
+                   help="By default, the analysis : scales the blocks, initiates the algorithm with Singular Value Decomposition, uses a superblock with a factorial scheme function, an biaised estimator of the var/cov, a tau equals to 1 and two components for each blocks."/>
             <when value="true">
                 <conditional name="connection">
                     <param name="bool" type="boolean"
@@ -81,30 +87,40 @@
                     <param name="bool" type="boolean" label="Color the samples according to their group of response"/>
                     <when value="true">
                         <param name="file" type="data" format="tsv,tabular,txt,csv" label="Groups of response"
-                               help="File containing an only column of a qualitative variable." />
+                           help="File containing an only column of either a qualitative, or a quantitative variable or multiple columns containing a disjunctive table." />
                     </when>
                 </conditional>
-                <param name="superblock" type="boolean" truevalue="" falsevalue="--superblock" checked="true" label="Used a superblock."/>
-                <param name="scale" type="boolean" truevalue="" falsevalue="--scale" checked="true" label="Standardized to zero means and unit variances and then divided by the square root of its number of variables."/>
-                <param name="bias" type="boolean" truevalue="" falsevalue="--bias" checked="true" label="Used a biaised estimator of the var/cov."/>
-                <param name="tau" type="float" label="Tau parameter in RGCCA" value="1" min="0" max="1" />
+                <param name="superblock" type="boolean" truevalue="" falsevalue="--superblock" checked="true" label="Used a superblock"
+                       help="A concatenation of all the blocks, used to better interpret the results."/>
+                <param name="scale" type="boolean" truevalue="" falsevalue="--scale" checked="true" label="Scale the blocks"
+                       help="Standardized each block to zero means and unit variances and then divided by the square root of its number of variables."/>
+                <param name="bias" type="boolean" truevalue="" falsevalue="--bias" checked="true" label="Used a biaised estimator of the var/cov"/>
+                <param name="tau" type="float" label="Tau parameter in RGCCA" value="1" min="0" max="1"
+                       help="A tau near to 0 maximize the covariance between blocks whereas a tau near to 1 maximize the correlation between the blocks." />
                 <param name="ncomp" type="integer" label="Number of component" help="Number of component to use in RGCCA algorithm." value="2" min="2" max="5" />
-                <param name="scheme" type="select" label="Scheme function" help="Choices of scheme function are the identity (horst scheme, leading
-                to maximizing the sum of covariances between block components), the absolute value (centroid scheme, yielding maximization of the sum
-                of the absolute values of the covariances), the square function (factorial scheme, thereby maximizing the sum of squared covariances),
-                or, more generally, for any even integer m,g(x)=x^m (m-scheme, maximizing the power of m of the sum ,of covariances). ">
+                <param name="scheme" type="select" label="Scheme function" help="The identity (horst scheme) maximizes the sum of covariances between block components. The absolute value (centroid scheme) yields maximization of the sum
+                of the absolute values of the covariances. The square function (factorial scheme) maximizes the sum of squared covariances,
+                or, more generally, for any even integer m,g(x)=x^m (m-scheme), maximizes the power of m of the sum ,of covariances.">
                     <option value="1">Horst : f(x) </option>
                     <option value="2" selected="true">Factorial : f(x)^2 </option>
                     <option value="3">Centroid : f|x| </option>
                     <option value="4">Other: f(x)^4</option>
                 </param>
-                <param name="init" type="select" label="Initialization mode" help="The mode of initialization to use in RGCCA algorithm.">
+                <param name="init" type="select" label="Initialization mode" help="The mode of initialization of RGCCA algorithm.">
                     <option value="1" selected="true">Singular Value Decompostion</option>
                     <option value="2">Random</option>
                 </param>
             </when>
         </conditional>
 
+        <conditional name="graphic">
+        <param name="advanced" type="boolean" label="Customize graphic settings" help="By default, the x-axis and y-axis are respectively the first and the second component, the number of top biomarkers is 100."/>
+        <when value="true">
+            <param name="compx" type="integer" label="Component for the X-axis" help="X-axis for biplots and component for histograms." value="1" min="1" max="5" />
+            <param name="compy" type="integer" label="Component for the Y-axis" help="Y-axis for biplots." value="2" min="1" max="5" />
+            <param name="nmark" type="integer" label="Number maximum of bioimarkers in the fingerprint" value="100" min="10" max="100" />
+        </when>
+        </conditional>
     </inputs>
 
     <outputs>
