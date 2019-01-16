@@ -1,21 +1,21 @@
 <macros>
 
     <token name="@VARIABLES_IMG@"><![CDATA[
-.. image:: https://gitlab.icm-institute.org/etienne.camenen/rgcca_software/raw/feature/proofConcept/img/variables_space.png
+.. image:: https://raw.githubusercontent.com/BrainAndSpineInstitute/rgcca_Rpackage/master/img/variables_space.png
             :height: 400
             :width: 500
             :target: https://gitlab.icm-institute.org/etienne.camenen/rgcca_galaxy/raw/feature/proofConcept/img/variables_space.png
 ]]></token>
 
     <token name="@SAMPLES_IMG@"><![CDATA[
-.. image:: https://gitlab.icm-institute.org/etienne.camenen/rgcca_software/raw/feature/proofConcept/img/samples_space.png
+.. image:: https://raw.githubusercontent.com/BrainAndSpineInstitute/rgcca_Rpackage/master/img/samples_space.png
             :height: 400
             :width: 500
             :target: https://gitlab.icm-institute.org/etienne.camenen/rgcca_galaxy/raw/feature/proofConcept/img/samples_space.png
 ]]></token>
 
     <token name="@BIOMARKERS_IMG@"><![CDATA[
-.. image:: https://gitlab.icm-institute.org/etienne.camenen/rgcca_software/raw/feature/proofConcept/img/best_biomarkers.png
+.. image:: https://raw.githubusercontent.com/BrainAndSpineInstitute/rgcca_Rpackage/master/img/best_biomarkers.png
             :height: 400
             :width: 500
             :target: https://gitlab.icm-institute.org/etienne.camenen/rgcca_galaxy/raw/feature/proofConcept/img/best_biomarkers.png

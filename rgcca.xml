@@ -1,4 +1,4 @@
-<tool id="multiOmics_Toolbox" name="multiOmics_Toolbox" version="1.0">
+<tool id="multiOmics_Toolbox" name="RGCCA" version="1.0">
 
     <description>performs multiblock data analysis of several sets of variables (blocks) observed on the same group of individuals.</description>
 
@@ -46,19 +46,19 @@
 
     <inputs>
     <param name="block_1" type="data" format="tsv,tabular,txt,csv" label="Dataset"
-           help="File containing a matrix with the samples in lines (should be labelled) and variables in columns (should have an header)." />
+           help="A file containing a matrix with the samples in lines (should be labelled) and variables in columns (should have a header)." />
     <repeat name="dataset" title="New dataset"
             help="Additional dataset with a different structure than the first one. Each dataset will be analysed separately.
             Expected format is a file containing a matrix with the samples in lines (should be labelled) and variables in columns
-            (should have an header)" >
+            (should have a header)" >
         <param name="block_n" type="data" format="tsv,tabular,txt,csv" label="Dataset" />
     </repeat>
 
         <conditional name="parse">
-            <param name="advanced" type="boolean" label="Customize parsing of the files" help="By default, on a tabulated file with an header."/>
+            <param name="advanced" type="boolean" label="Customize parsing of the files" help="By default, on tabulated files with a header."/>
             <when value="true">
-                <param name="header" type="boolean" truevalue="" falsevalue="-H" checked="true" label="Consider first row as header of columns"/>
-                <param name="separator" type="select" display="radio" label="Column separator" help="Character used to separate the column in the dataset (by default: tabulation). ">
+                <param name="header" type="boolean" truevalue="" falsevalue="-H" checked="true" label="Consider the first row as header of columns"/>
+                <param name="separator" type="select" display="radio" label="Column separator" help="Character used to separate the column in the dataset (by default : tabulation). ">
                     <option value="1" selected="true">Tabulation</option>
                     <option value="2">Semicolon</option>
                 </param>
@@ -67,11 +67,11 @@
 
         <conditional name="analyse">
             <param name="advanced" type="boolean" label="Customize analysis settings"
-                   help="By default, the analysis : scales the blocks, initiates the algorithm with Singular Value Decomposition, uses a superblock with a factorial scheme function, an biaised estimator of the var/cov, a tau equals to 1 and two components for each blocks."/>
+                   help="By default, the analysis : scales the blocks, initiates the algorithm with Singular Value Decomposition, uses a superblock with a factorial scheme function, a biased estimator of the variance, a tau equals to one and two components for each block."/>
             <when value="true">
                 <conditional name="connection">
                     <param name="bool" type="boolean"
-                           label="Modifiy the design matrix (describes the relationships between blocks)" />
+                           label="Modify the design matrix (describes the relationships between blocks)" />
                     <when value="true">
                         <param name="file" type="data" format="tsv,tabular,txt,csv" label="Design matrix"
                                help="The design matrix is a symmetric matrix of non-negative elements describing the network of connections
@@ -87,20 +87,21 @@
                     <param name="bool" type="boolean" label="Color the samples according to their group of response"/>
                     <when value="true">
                         <param name="file" type="data" format="tsv,tabular,txt,csv" label="Groups of response"
-                           help="File containing an only column of either a qualitative, or a quantitative variable or multiple columns containing a disjunctive table." />
+                           help="A file containing an only column of either a qualitative, or a quantitative variable or multiple columns containing a disjunctive table." />
                     </when>
                 </conditional>
-                <param name="superblock" type="boolean" truevalue="" falsevalue="--superblock" checked="true" label="Used a superblock"
-                       help="A concatenation of all the blocks, used to better interpret the results."/>
+                <param name="superblock" type="boolean" truevalue="" falsevalue="--superblock" checked="true" label="Use a superblock"
+                       help="A concatenation of all the blocks to better interpret the results."/>
                 <param name="scale" type="boolean" truevalue="" falsevalue="--scale" checked="true" label="Scale the blocks"
-                       help="Standardized each block to zero means and unit variances and then divided by the square root of its number of variables."/>
-                <param name="bias" type="boolean" truevalue="" falsevalue="--bias" checked="true" label="Used a biaised estimator of the var/cov"/>
+                       help="Standardize each block to zero means and unit variances and then divide them by the square root of its number of variables."/>
+                <param name="bias" type="boolean" truevalue="" falsevalue="--bias" checked="true" label="Use a biased estimator of the variance"/>
                 <param name="tau" type="float" label="Tau parameter in RGCCA" value="1" min="0" max="1"
-                       help="A tau near to 0 maximize the covariance between blocks whereas a tau near to 1 maximize the correlation between the blocks." />
-                <param name="ncomp" type="integer" label="Number of component" help="Number of component to use in RGCCA algorithm." value="2" min="2" max="5" />
-                <param name="scheme" type="select" label="Scheme function" help="The identity (horst scheme) maximizes the sum of covariances between block components. The absolute value (centroid scheme) yields maximization of the sum
+                       help="A tau near 0 maximize the covariance in each blocks whereas a tau near 1 maximize the correlation between the blocks." />
+                <param name="ncomp" type="integer" label="Number of component" value="2" min="2" max="5"
+                       help="The number of component to use in the analysis for each block (should not be greater than the minimum number of variable among the blocks)." />
+                <param name="scheme" type="select" label="Scheme function" help="The identity (horst scheme) maximizes the sum of covariances between block components. The absolute value (centroid scheme) maximizes of the sum
                 of the absolute values of the covariances. The square function (factorial scheme) maximizes the sum of squared covariances,
-                or, more generally, for any even integer m,g(x)=x^m (m-scheme), maximizes the power of m of the sum ,of covariances.">
+                or, more generally, for any even integer m, g(x)=x^m (m-scheme), maximizes the power of m of the sum of covariances.">
                     <option value="1">Horst : f(x) </option>
                     <option value="2" selected="true">Factorial : f(x)^2 </option>
                     <option value="3">Centroid : f|x| </option>
@@ -114,11 +115,12 @@
         </conditional>
 
         <conditional name="graphic">
-        <param name="advanced" type="boolean" label="Customize graphic settings" help="By default, the x-axis and y-axis are respectively the first and the second component, the number of top biomarkers is 100."/>
+        <param name="advanced" type="boolean" label="Customize graphic settings" help="By default, the x-axis and y-axis are respectively the first and the second components, the number of top biomarkers is 100."/>
         <when value="true">
-            <param name="compx" type="integer" label="Component for the X-axis" help="X-axis for biplots and component for histograms." value="1" min="1" max="5" />
-            <param name="compy" type="integer" label="Component for the Y-axis" help="Y-axis for biplots." value="2" min="1" max="5" />
-            <param name="nmark" type="integer" label="Number maximum of bioimarkers in the fingerprint" value="100" min="10" max="100" />
+            <param name="compx" type="integer" label="Component for the X-axis" help="The component used in the X-axis for biplots and the only component used for histograms." value="1" min="1" max="5" />
+            <param name="compy" type="integer" label="Component for the Y-axis" help="The component used in the Y-axis for biplots." value="2" min="1" max="5" />
+            <param name="nmark" type="integer" label="Maximum number of bioimarkers" value="100" min="10" max="100"
+                   help="The maximum number of top potential biomarkers (in fingerprint file)"/>
         </when>
         </conditional>
     </inputs>
@@ -150,7 +152,7 @@ The RGCCA package is available from the CRAN repository (https://cran.r-project.
 ---------------------------------------------------
 
 ==================================
-MULTI-OMICS TOOLBOX
+RGCCA
 ==================================
 
 **Description**
@@ -166,20 +168,21 @@ of variability within blocks and the amount of correlation between blocks.
 
 **Input file**
 
-- *blocks* (.tsv, .csv or .txt) : tabulated files containing variables to analyse together. The samples should be in lines and labelled and variables in columns with an header.
-- *connection* (.tsv, .csv or .txt) : tabulated files without header, containing a symmetric matrix with either 0 or 1 for a connection between each blocks.
+- *blocks* (.tsv, .csv or .txt) : tabulated files containing variables to analyse together. The samples should be in lines and labelled and variables in columns with a header.
+- *connection* (.tsv, .csv or .txt) : tabulated files without header, containing a symmetric matrix with either 0 or 1 for a connection between each block.
 - *response* (.tsv, .csv or .txt) : an only column of a qualitative variable.
 
 **Working example**
 
-    | From Russett data (RGCCA package) : https://gitlab.icm-institute.org/etienne.camenen/rgcca_galaxy/tree/feature/proofConcept/data
+    | From Russett data (RGCCA package) : https://github.com/BrainAndSpineInstitute/rgcca_Rpackage/tree/master/data
     | Use *agriculture.tsv* as dataset. Add *industry.tsv* and *politic.tsv* as new dataset. Eventually, use *response.tsv* as group of response in analysis custom settings.
 
 **Output files**
 
-- *corcircle* (.pdf) : samples projected in a space composed by the first two component of the analysis (with the percent of explained variance). By selecting a response, samples are colored according to this criterion.
-- *samples_space* (.pdf) : circle of correlation of variables with the first two component of the analysis (with the percent of  explained variance). The dotted circle corresponds to a 0.5 correlation and the full one corresponds to a 1 correlation.
+- *corcircle* (.pdf) : samples projected in a space composed by the first two components of the analysis (with the percent of explained variance). By selecting a response, samples are colored according to this criterion.
+- *samples_space* (.pdf) : circle of correlation of variables with the first two components of the analysis (with the percent of  explained variance). The dotted circle corresponds to a 0.5 correlation and the full one corresponds to a 1 correlation.
 - *fingerprint* (.pdf) : 100 best biomarkers for a set of blocks according to the weight of these variables in the analysis (eigen value for PCA, canonical variable for CCA, component for PLS and RGCCA).
+- *ave* (.pdf) : average variance explained (in %) in the model for each block ranked decreasingly.
 
 <![CDATA[
 

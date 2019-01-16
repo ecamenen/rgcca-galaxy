@@ -1,3 +1,14 @@
+# Author: Etienne CAMENEN
+# Date: 2018
+# Contact: arthur.tenenhaus@l2s.centralesupelec.fr
+# Key-words: omics, RGCCA, multi-block
+# EDAM operation: analysis, correlation, visualisation
+#
+# Abstract: A user-friendly multi-blocks analysis (Regularized Generalized Canonical Correlation Analysis, RGCCA)
+# with all default settings predefined. Produce four figures to help clinicians to identify fingerprint:
+# the samples and the variables projected on the two first component of the multi-block analysis, the histograms
+# of the most explicative variables and the explained variance for each blocks.
+
 #Global settings
 MSG_HEADER = " Possible mistake: header parameter is disabled, check if the file doesn't have one."
 ROW_NAMES = 1 # column of row names
@@ -38,7 +49,7 @@ loadData = function(f, sep = "\t", row.names = 1, h = TRUE) {
   # TODO: catch warning missing \n at the end of the file
 }
 
-#' Creates a data frame from loading a file
+#' Creates a data frame from an Excel file loading
 #'
 #' @param f A character giving the file name
 #' @param sheet A character giving the sheet name
@@ -108,7 +119,7 @@ parseList = function(s) {
   unlist(strsplit(s, ","))
 }
 
-#' Check if a dataframe contains no quanlitative variables
+#' Check if a dataframe contains no qualitative variables
 #'
 #' @param df A dataframe or a matrix
 #' @param fo A character giving the name of the tested file
@@ -240,7 +251,7 @@ checkConnection = function(c, blocks) {
   if (NCOL(c) != n)
     stop(paste("The number of rows/columns of the connection matrix file must be equals to ",
                n,
-               " (the number of files in the dataset + 1).\n", sep = ""),
+               " (the number of blocks in the dataset, +1 with a superblock by default).\n", sep = ""),
          call. = FALSE)
   d = unique(diag(c))
   if (length(d) != 1 || d != 0)

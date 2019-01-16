@@ -1,11 +1,8 @@
 # Author: Etienne CAMENEN
 # Date: 2018
-# Institute: ICM - Institut du Cerveau et de la Moelle epiniere (Paris, FRANCE),
-# Institut Francais de Bioinformatique (IFB), Centre national de la recherche scientifique (CNRS)
-# Contact: iconics@icm-institute.org
+# Contact: arthur.tenenhaus@l2s.centralesupelec.fr
 # Key-words: omics, RGCCA, multi-block
 # EDAM operation: analysis, correlation, visualisation
-# EDAM topic: omics, medecine, mathematics
 #
 # Abstract: A user-friendly multi-blocks analysis (Regularized Generalized Canonical Correlation Analysis, RGCCA)
 # with all default settings predefined. Produce four figures to help clinicians to identify fingerprint:
@@ -22,36 +19,36 @@ rm(list=ls())
 # Parse the arguments from a command line launch
 getArgs = function(){
   option_list = list(
-    make_option(c("-d", "--datasets"), type="character", metavar="character", help="Path of the block files", default = opt[15]),
+    make_option(c("-d", "--datasets"), type="character", metavar="character", help="List of the paths for each block file separated by comma (without space between)", default = opt[15]),
     make_option(c("-w", "--directory"), type="character", metavar="character", help="Path of the scripts directory (for Galaxy)", default=opt[1]),
     make_option(c("-c", "--connection"), type="character", metavar="character", help="Path of the connection file"),
-    make_option(c("-r", "--response"), type="character", metavar="character", help="Path of the response file"),
-    make_option(c("--names"), type="character", metavar="character", help="Names of the blocks [default: filename]"),
-    make_option(c("-H", "--header"), type="logical", action="store_false", help="DO NOT consider first row as header of columns"),
+    make_option(c("-r", "--response"), type="character", metavar="character", help="Path of the response file (to color samples by group in the associated plot)"),
+    make_option(c("--names"), type="character", metavar="character", help="List of the names for each block file separated by comma [default: filename]"),
+    make_option(c("-H", "--header"), type="logical", action="store_false", help="DO NOT consider the first row as header of columns"),
     make_option(c("--separator"), type="integer", metavar="integer", default=1,
-                help="Type of separator (1: Tabulation, 2: Semicolon, 3: Comma) [default: tabulation]"),
-    make_option(c("-t", "--tau"), type="character", metavar="character/double", default=opt[4],
-                help="Tau parameter for RGCCA (eihter a double between 0 and 1 or the character 'optimal' for an automatic setting)"),
+                help="Character used to separate the columns (1: Tabulation, 2: Semicolon, 3: Comma) [default: tabulation]"),
+    make_option(c("-t", "--tau"), type="character", metavar="float", default=opt[4],
+                help="Tau parameter for RGCCA, a float between 0 (maximize the covariance) and 1 (maximize the correlation between blocks)"),
     make_option(c("-g", "--scheme"), type="integer", metavar="integer", default=2,
-                help="Scheme function g(x) (1: x, 2: x^2, 3: |x|, 4: x^4) [default: x^2]"),
+                help="Scheme function g(x) for RGCCA (1: x, 2: x^2, 3: |x|, 4: x^4) [default: x^2]"),
     make_option(c("--scale"),  type="logical", action="store_false",
-                help="DO NOT scale the blocks"),
+                help="DO NOT scale the blocks (i.e., standardize each block to zero mean and unit variances and then divide them by the square root of its number of variables)"),
     make_option(c("--superblock"),  type="logical", action="store_false",
-                help="DO NOT use a superblock"),
+                help="DO NOT use a superblock (a concatenation of all the blocks to better interpret the results)"),
     make_option(c("--init"),  type="integer", metavar="integer", default=1,
-                help="Initialization mode (1: Singular Value Decompostion , 2: random) [default: SVD]"),
+                help="Initialization mode for RGCCA (1: Singular Value Decompostion , 2: random) [default: SVD]"),
     make_option(c("--bias"),  type="logical", action="store_false",
-                help="Unbiased estimator of the var/conv"),
+                help="Unbiased estimator of the variance"),
     make_option(c("--ncomp"),  type="integer", metavar="integer", default=opt[6],
-                help="Number of components in the analysis"),
+                help="Number of components in the analysis for each block (should be greater than 1 and lower than the minimum number of variable among the blocks)"),
     make_option(c("--block"),  type="integer", metavar="integer", default=opt[7],
                 help="Number of the block shown in the graphics (0: the superblock or, if not, the last, 1: the fist one, 2: the 2nd, etc.) [default: the last one]"),
     make_option(c("--compx"),  type="integer", metavar="integer", default=opt[8],
-                help="X-axis for biplots and component for histograms"),
+                help="Component used in the X-axis for biplots and the only component used for histograms (should not be greater than the --ncomp parameter)"),
     make_option(c("--compy"),  type="integer", metavar="integer", default=opt[9],
-                help="Y-axis for biplots"),
+                help="Component used in the Y-axis for biplots (should not be greater than the --ncomp parameter)"),
     make_option(c("--nmark"),  type="integer", metavar="integer", default=opt[10],
-                help="Number maximum of bioimarkers in the fingerprint"),
+                help="Number maximum of biomarkers in the fingerprint"),
     make_option(c( "--output1"), type="character", metavar="character", default=opt[11],
                 help="Variables space file name [default: %default]"),
     make_option(c( "--output2"), type="character", metavar="character", default=opt[12],
@@ -129,7 +126,7 @@ postCheckArg = function(opt, blocks){
   }
   out = sapply(c("compx", "compy"), function(x) checkComp (x))
 
-  MSG = "--tau must be comprise between 0 and 1 or must corresponds to the character 'optimal' for automatic setting.\n"
+  MSG = "--tau must be comprise between 0 and 1 or must correspond to the character 'optimal' for automatic setting.\n"
   if (opt$tau != "optimal"){
     tryCatch({
       opt$tau = as.double(gsub(",", ".",  opt$tau))

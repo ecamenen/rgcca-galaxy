@@ -1,3 +1,14 @@
+# Author: Etienne CAMENEN
+# Date: 2018
+# Contact: arthur.tenenhaus@l2s.centralesupelec.fr
+# Key-words: omics, RGCCA, multi-block
+# EDAM operation: analysis, correlation, visualisation
+#
+# Abstract: A user-friendly multi-blocks analysis (Regularized Generalized Canonical Correlation Analysis, RGCCA)
+# with all default settings predefined. Produce four figures to help clinicians to identify fingerprint:
+# the samples and the variables projected on the two first component of the multi-block analysis, the histograms
+# of the most explicative variables and the explained variance for each blocks.
+
 #Global settings
 MAX_CLUSTERS = 10
 AXIS_TITLE_SIZE = 19
@@ -107,10 +118,10 @@ plotSamplesSpace = function (rgcca, resp, comp_x = 1, comp_y = 2, i_block = NULL
 
 #' Get the blocs of each variables
 #'
-#' Get a vector of block name for each corresponding variable. The last block is considered as the superblock and ignored.
+#' Get a vector of block names for each corresponding variable. The last block is considered as the superblock and ignored.
 #'
 #' @param rgcca A list giving the results of a R/SGCCA
-#' @return A vector of character giving block name for each corresponding variable.
+#' @return A vector of character giving block names for each corresponding variable.
 #' @seealso \code{\link[RGCCA]{rgcca}}, \code{\link[RGCCA]{sgcca}}
 #' @examples
 #' rgcca.res = list(a = rep(NA, 4))
@@ -243,8 +254,8 @@ plotSpace = function (rgcca, df, title, group, name_group, comp_x = 1, comp_y = 
 #' Histogram of the higher outer weight vectors for a component of a block (by default, the superblock or the last one) analysed by R/SGCCA
 #'
 #' @param rgcca A list giving the results of a R/SGCCA
-#' @param comp An integer giving the index of the analysis component
-#' @param n_mark An integer giving the number of best fingerprint to select
+#' @param comp An integer giving the index of the analysis components
+#' @param n_mark An integer giving the number of top potential biomarkers to select
 #' @param superblock A boolean giving the presence (TRUE) / absence (FALSE) of a superblock
 #' @param i_block An integer giving the index of a list of blocks
 #' @seealso \code{\link[RGCCA]{rgcca}}, \code{\link[RGCCA]{sgcca}}
@@ -255,7 +266,7 @@ plotSpace = function (rgcca, df, title, group, name_group, comp_x = 1, comp_y = 
 #' names(rgcca.res$a) = LETTERS[1:4]
 #' # With the 1rst component of the superblock
 #' plotFingerprint(rgcca.res, 1, TRUE)
-#' # With the 2nd component of the 1rst block by selecting the 5 higher weights
+#' # With the 2nd component of the 1rst block by selecting the ten higher weights
 #' plotFingerprint(rgcca.res, 2, FALSE, 10, 1)
 #' @export plotFingerprint
 plotFingerprint = function(rgcca, comp = 1, superblock = TRUE, n_mark = 100, i_block = NULL){
@@ -299,10 +310,10 @@ plotFingerprint = function(rgcca, comp = 1, superblock = TRUE, n_mark = 100, i_b
 
 #' Histogram of Average Variance Explained
 #'
-#' Histogram of the model quality (base on Average Variance Explained) for each blocks and sort in decreasing order
+#' Histogram of the model quality (based on Average Variance Explained) for each blocks and sorted in decreasing order
 #'
 #' @param rgcca A list giving the results of a R/SGCCA
-#' @param comp An integer giving the index of the analysis component
+#' @param comp An integer giving the index of the analysis components
 #' @seealso \code{\link[RGCCA]{rgcca}}, \code{\link[RGCCA]{sgcca}}
 #' @examples
 #' random_val = function() lapply(1:4, function(x) runif(1))
