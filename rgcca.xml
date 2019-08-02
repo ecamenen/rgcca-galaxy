@@ -14,10 +14,10 @@
             #set $data_names += ',' + $s.block_n.name
         #end for
         Rscript $__tool_directory__/R/launcher.R
-             -d "${$data_paths}"
+             --datasets "${$data_paths}"
              --names "${$data_names}"
-             -w $__tool_directory__
-             --output1 $samples_space --output2 $corcircle --output3 $fingerprint --output4 $ave
+             --directory $__tool_directory__
+             --o1 $samples_space --o2 $corcircle --o3 $fingerprint --o4 $ave --o5 $weights
              #if $parse.advanced
                 $parse.header
                 --separator $parse.separator
@@ -25,16 +25,14 @@
              #if $analyse.advanced
                 $analyse.superblock
                 $analyse.scale
-                $analyse.bias
-                -t $analyse.tau
+                --tau $analyse.tau
                 --ncomp $analyse.ncomp
-                -g $analyse.scheme
-                --init $analyse.init
+                --scheme $analyse.scheme
                 #if $analyse.connection.bool
                     -c $analyse.connection.file
                 #end if
                 #if $analyse.response.bool
-                    -r $analyse.response.file
+                    --group $analyse.response.file
                 #end if
              #end if
              #if $graphic.advanced
@@ -45,10 +43,10 @@
     ]]></command>
 
     <inputs>
-    <param name="block_1" type="data" format="tsv,tabular,txt,csv" label="Dataset"
+    <param name="block_1" type="data" format="tsv,tabular,txt,csv" label="Block"/>
            help="A file containing a matrix with the samples in lines (should be labelled) and variables in columns (should have a header)." />
-    <repeat name="dataset" title="New dataset"
-            help="Additional dataset with a different structure than the first one. Each dataset will be analysed separately.
+    <repeat name="dataset" title="New block"
+            help="Additional block with a different structure than the first one. Each block will be analysed separately.
             Expected format is a file containing a matrix with the samples in lines (should be labelled) and variables in columns
             (should have a header)" >
         <param name="block_n" type="data" format="tsv,tabular,txt,csv" label="Dataset" />
@@ -94,7 +92,6 @@
                        help="A concatenation of all the blocks to better interpret the results."/>
                 <param name="scale" type="boolean" truevalue="" falsevalue="--scale" checked="true" label="Scale the blocks"
                        help="Standardize each block to zero means and unit variances and then divide them by the square root of its number of variables."/>
-                <param name="bias" type="boolean" truevalue="" falsevalue="--bias" checked="true" label="Use a biased estimator of the variance"/>
                 <param name="tau" type="float" label="Tau parameter in RGCCA" value="1" min="0" max="1"
                        help="A tau near 0 maximize the covariance in each blocks whereas a tau near 1 maximize the correlation between the blocks." />
                 <param name="ncomp" type="integer" label="Number of component" value="2" min="2" max="5"
@@ -106,10 +103,6 @@
                     <option value="2" selected="true">Factorial : f(x)^2 </option>
                     <option value="3">Centroid : f|x| </option>
                     <option value="4">Other: f(x)^4</option>
-                </param>
-                <param name="init" type="select" label="Initialization mode" help="The mode of initialization of RGCCA algorithm.">
-                    <option value="1" selected="true">Singular Value Decompostion</option>
-                    <option value="2">Random</option>
                 </param>
             </when>
         </conditional>
@@ -130,6 +123,7 @@
         <data name="corcircle" label="corcircle.pdf" format="pdf" />
         <data name="fingerprint"  label="fingerprint.pdf" format="pdf" />
         <data name="ave"  label="ave.pdf" format="pdf" />
+        <data name="weights"  label="weights.csv" format="txt" />
     </outputs>
 <help>
 

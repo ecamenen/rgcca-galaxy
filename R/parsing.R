@@ -9,6 +9,28 @@
 # the samples and the variables projected on the two first component of the multi-block analysis, the histograms
 # of the most explicative variables and the explained variance for each blocks.
 
+loadLibraries <- function(librairies){
+  for (l in librairies){
+    if (!(l %in% installed.packages()[, "Package"]))
+      utils::install.packages(l, repos = "http://cran.us.r-project.org")
+    library(l, character.only = TRUE,
+            warn.conflicts = FALSE,
+            quiet = TRUE)
+  }
+}
+
+warning <- function(message,  call = sys.call(-1)){
+  base::warning(message, call. = FALSE, immediate. = TRUE)
+}
+
+stop <- function(message, exit_code = "1", call = NULL) {
+  base::stop(
+    structure(
+      class = c(exit_code, "simpleError", "error", "condition"),
+      list(message = message, call. = NULL)
+    ))
+}
+
 #Global settings
 MSG_HEADER = " Possible mistake: header parameter is disabled, check if the file doesn't have one."
 ROW_NAMES = 1 # column of row names
@@ -26,16 +48,38 @@ ROW_NAMES = 1 # column of row names
 #' @export getFileName
 getFileName = function(fi) {
 
-  fo = unlist(strsplit(fi, "/"))
-  fo = fo[length(fo)]
-  unlist(strsplit(fo, "[.]"))[1]
+  if(!is.null(fi)){
+    fo = unlist(strsplit(fi, "/"))
+    fo = fo[length(fo)]
+    unlist(strsplit(fo, "[.]"))[1]
+  }
+}
+
+# Print warning if file size over
+checkFileSize = function(filename){
+  size = file.size(filename)
+  if(size > 5E6)
+    #warning(paste0("The size of ", filename, " is over 5 Mo (", round(size / 1E6, 1), " Mo). File loading could take some times..."),
+    message("File loading in progress ...")
+}
+
+convertMatrixNumeric <- function(df){
+    matrix( sapply(1:(nrow(df) * ncol(df) ),
+                   function(i)
+                     tryCatch({
+                       as.numeric(df[i])
+                      }, warning = function(e) NA
+                     )),
+                nrow(df),
+                ncol(df),
+                dimnames = list(row.names(df), colnames(df)))
 }
 
 #' Creates a matrix from loading a file
 #'
 #' @param f A character giving the file name
 #' @param sep A character giving the column separator
-#' @param row.names A vector of characters giving the names of the rows
+#' @param rownames An integer corresponding to the column number of the row names (NULL otherwise)
 #' @param h A bolean giving the presence or the absence of the header
 #' @return A matrix containing the loaded file
 #' @examples
@@ -43,34 +87,59 @@ getFileName = function(fi) {
 #' loadData("data/agriculture.tsv")
 #' }
 #' @export loadData
-loadData = function(f, sep = "\t", row.names = 1, h = TRUE) {
+loadData = function(f, sep = "\t", rownames = 1, h = TRUE) {
 
-  as.matrix(read.table(f, sep = sep, header = h, row.names = row.names, na.strings = "NA"))
-  # TODO: catch warning missing \n at the end of the file
+  if (!is.null(rownames) && rownames < 1)
+    rownames <- NULL
+
+  func <- function(x = rownames)
+    as.matrix(read.table(f, sep = sep, header = h, row.names = x, na.strings = "NA", dec = ","))
+
+  tryCatch({
+      func()
+    }, error = function(e) {
+        if(e$message == "duplicate 'row.names' are not allowed")
+            func(NULL)
+    }
+  )
+
 }
 
-#' Creates a data frame from an Excel file loading
-#'
-#' @param f A character giving the file name
-#' @param sheet A character giving the sheet name
-#' @param row.names A vector of characters giving the names of the rows
-#' @param h A bolean giving the presence or the absence of the header
-#' @return A matrix containing the loaded file
-#' @examples
-#' \dontrun{
-#' loadExcel("data/blocks.xlsx", "industry")
-#' }
-#' @export loadExcel
-loadExcel = function(f, sheet, row.names = 1, h = TRUE) {
-  # TODO: opt$dataset in arg
-
-  df = read.xlsx2(f, sheet, header = h)
-  checkQuantitative(df[, -row.names], opt$datasets, h)
-  df2 = as.matrix(as.data.frame(lapply(df[-row.names], function(x) as.numeric(as.vector(x)))))
-  row.names(df2) = df[, row.names]
-
-  return (df2)
-}
+# Creates a data frame from an Excel file loading
+#
+# @param f A character giving the file name
+# @param sheet A character giving the sheet name
+# @param rownames An integer corresponding to the column number of the row names (NULL otherwise)
+# @param h A bolean giving the presence or the absence of the header
+# @param num A bolean giving the presence or the absence of numerical values
+# @return A matrix containing the loaded file
+# @examples
+# \dontrun{
+# loadExcel("data/blocks.xlsx", "industry")
+# }
+# @export loadExcel
+# loadExcel = function(f, sheet, rownames = 1, h = TRUE, num = TRUE) {
+#
+#   if (!is.null(rownames) && rownames < 1)
+#     rownames = NULL
+#
+#   df = read.xlsx(f, sheet, header = h, startRow = 1)
+#
+#   if(!is.null(rownames)){
+#     names = df[, rownames]
+#     df = df[, -rownames]
+#   }
+#
+#   if(num)
+#     df = as.data.frame(lapply(df, function(x) as.numeric(as.vector(x))))
+#
+#   df = as.matrix(df)
+#
+#   if(!is.null(rownames))
+#     row.names(df) = names
+#
+#   return (df)
+# }
 
 #' Save a ggplot object
 #'
@@ -82,7 +151,7 @@ loadExcel = function(f, sheet, row.names = 1, h = TRUE) {
 #' library("ggplot2")
 #' df = as.data.frame(matrix(runif(20), 10, 2))
 #' p = ggplot(df, aes(df[, 1], df[, 2]))
-#' savePlot("Rplot.png", p)
+#' #savePlot("Rplot.png", p)
 #' @export savePlot
 savePlot = function(f, p) {
 
@@ -90,17 +159,23 @@ savePlot = function(f, p) {
   format = unlist(strsplit(f, '.', fixed="T"))
   format = format[length(format)]
 
-  # dynamic loading of function depending of the extension
+  # dynamic loading of formattion depending of the extension
   if (format == "dat")
-    func = pdf
+    formatFunc = pdf
   else
-    func = get(format)
+    formatFunc = get(format)
 
   # save
-  if (format %in% c("pdf", "dat") ) func(f, width = 10, height = 8)
-  else func(f, width = 10, height = 8, units = "in", res = 200)
+  if (format %in% c("pdf", "dat") )
+    formatFunc(f, width = 10, height = 8)
+  else
+    formatFunc(f, width = 10, height = 8, units = "in", res = 200)
 
-  plot(p)
+  if(is.function(p))
+    p()
+  else
+    plot(p)
+
   suprLog = dev.off()
 }
 
@@ -134,38 +209,43 @@ parseList = function(s) {
 #' }
 #' @export checkQuantitative
 checkQuantitative = function(df, fo, h = FALSE) {
+
   qualitative = unique(unique(isCharacter(as.matrix(df))))
+
   if (length(qualitative) > 1 || qualitative) {
     msg = paste(fo, "file contains qualitative data. Please, transform them in a disjunctive table.")
+
     if (!h)
-      msg = paste(msg, MSG_HEADER, sep = "")
-    stop(paste(msg, "\n"), call. = FALSE)
+      msg = paste0(msg, MSG_HEADER)
+
+    stop(paste(msg, "\n"), exit_code = 100)
   }
+
 }
 
 checkFile = function (f){
   # Check the existence of a path
   # f: A character giving the path of a file
 
-  if(!file.exists(f)){
-    stop(paste(f, " file does not exist\n", sep=""), call.=FALSE)
-  }
+  if(!file.exists(f))
+    stop(paste0(f, " file does not exist."), exit_code = 101)
+
 }
 
 #' Create a list of matrix from loading files corresponding to blocks
 #'
-#' @param superblock A boolean giving the presence (TRUE) / absence (FALSE) of a superblock
 #' @param file A character giving the path of a file used as a response
 #' @param names A character giving a list of names for the blocks
 #' @param sep A character giving the column separator
 #' @param header A bolean giving the presence or the absence of the header
+#' @param rownames An integer corresponding to the column number of the row names (NULL otherwise)
 #' @return A list matrix corresponding to the blocks
 #' @examples
 #' \dontrun{
 #' setBlocks (TRUE, "data/agriculture.tsv,data/industry.tsv,data/politic.tsv", "agric,ind,polit")
 #' }
 #' @export setBlocks
-setBlocks = function(superblock, file, names = NULL, sep = "\t", header = TRUE) {
+setBlocks = function(file, names = NULL, sep = "\t", header = TRUE, rownames = ROW_NAMES) {
 
   # Parse args containing files path
   isXls <- (length(grep("xlsx?", file)) == 1)
@@ -174,12 +254,12 @@ setBlocks = function(superblock, file, names = NULL, sep = "\t", header = TRUE) 
     # if it is not, parse the name of file from the arg list
     blocksFilename = parseList(file)
   else {
-    # if xls, check file exists
-    checkFile(file)
-    # load the xls
-    wb = loadWorkbook(file)
-    # load the blocks
-    blocksFilename = names(getSheets(wb))
+    # # if xls, check file exists
+    # checkFile(file)
+    # # load the xls
+    # wb = loadWorkbook(file)
+    # # load the blocks
+    # blocksFilename = names(getSheets(wb))
   }
 
   # Parse optional names of blocks
@@ -211,31 +291,48 @@ setBlocks = function(superblock, file, names = NULL, sep = "\t", header = TRUE) 
     }
 
     #load the data
-    if (!isXls)
-      df = loadData(fi, sep, ROW_NAMES, header)
-    else
-      df = loadExcel(file, blocksFilename[i], ROW_NAMES, header)
+    if (!isXls){
+      checkFileSize(fi)
+      df = loadData(fi, sep, rownames, header)
+    }
+    # }else{
+    #   checkFileSize(file)
+    #   df = loadExcel(file, blocksFilename[i], rownames, header)
+    # }
 
     #if one-column file, it is a tabulation error
     if (NCOL(df) == 0)
-      stop(paste(fo, "block file has an only-column. Check the separator [by default: tabulation].\n"),
-           call. = FALSE)
+      stop(paste(fo, "block file has an only-column. Check the separator."), exit_code = 102)
+
+    dimnames = list(row.names(df), colnames(df))
+    df <- convertMatrixNumeric(df)
+
+    if( any(is.na(df)) ){
+      df = matrix(unlist(lapply(1:ncol(df),
+                                    function(x) unlist(lapply(as.list(df[,x]),
+                                                                           function(y) ifelse(is.na(y),  mean(unlist(df[, x]), na.rm = T), y))))),
+                      nrow(df), ncol(df))
+    }
 
     checkQuantitative(df, fo, header)
-
+    df = matrix( as.numeric(df), nrow(df), ncol(df), dimnames = dimnames)
     blocks[[fo]] = df
   }
 
-  if (length(unique(sapply(1:length(blocks), function(x) NROW(blocks[[x]])))) > 1)
-    stop("The number of rows is different among the blocks.\n", call. = FALSE)
-  #print(names(blocks[[3]])[99])
-  #blocks[[3]] = blocks[[3]][, -99]
+  nrow = lapply(blocks, NROW)
 
-  if( superblock )
-    blocks[["Superblock"]] = Reduce(cbind, blocks)
-  #blocks[["Superblock"]] = blocks[["Superblock"]][, -242]
+  if(length(blocks) > 1)
+    blocks = keepCommonRow(blocks)
+    blocks = removeColumnSdNull(blocks)
 
-  return(blocks)
+	for (i in 1:length(blocks)){
+		attributes(blocks[[i]])$nrow = nrow[[i]]
+	}
+
+  if(nrow(blocks[[1]]) > 0)
+    return(blocks)
+  else
+    stop("There is no rows in common between the blocks.", exit_code = 108)
 }
 
 #' Check the format of the connection matrix
@@ -246,44 +343,63 @@ setBlocks = function(superblock, file, names = NULL, sep = "\t", header = TRUE) 
 checkConnection = function(c, blocks) {
 
   if (!isSymmetric.matrix(unname(c)))
-    stop("The connection file must be a symmetric matrix.\n", call. = FALSE)
-  n = length(blocks)
-  if (NCOL(c) != n)
-    stop(paste("The number of rows/columns of the connection matrix file must be equals to ",
-               n,
-               " (the number of blocks in the dataset, +1 with a superblock by default).\n", sep = ""),
-         call. = FALSE)
+    stop("The connection file must be a symmetric matrix.", exit_code = 103)
+
   d = unique(diag(c))
   if (length(d) != 1 || d != 0)
-    stop("The diagonal of the connection matrix file must be 0.\n", call. = FALSE)
+    stop("The diagonal of the connection matrix file must be 0.", exit_code = 105)
+
   x = unique(c %in% c(0, 1))
   if (length(x) != 1 || x != T)
-    stop("The connection file must contains only 0 or 1.\n", call. = FALSE)
+    stop("The connection file must contains only 0 or 1.", exit_code = 106)
+
+  if(all(c==0))
+    stop("The connection file could not contain only 0.", exit_code = 107)
+
+  n = length(blocks)
+  if (NCOL(c) != n)
+    stop(paste0("The number of rows/columns of the connection matrix file must be equal to ",
+                n,
+                " (the number of blocks in the dataset, +1 with a superblock by default)."),
+         exit_code = 104)
+
+  #TODO: warning if superblock = TRUE
 
 }
 
-#' Create a matrix from loading a file corresponding to a connection between the blocks
+#' Create a matrix corresponding to a connection between the blocks
 #'
 #' @param blocks A list of matrix
+#' @param superblock A boolean giving the presence (TRUE) / absence (FALSE) of a superblock
 #' @param file A character giving the path of a file used as a response
 #' @param sep A character giving the column separator
-#' @return A matrix corresponding to the response
+#' @param rownames An integer corresponding to the column number of the row names (NULL otherwise)
+#' @param h A bolean giving the presence or the absence of the header
+#' @return A matrix corresponding to the connection between the blocks
 #' @examples
 #' \dontrun{
 #' blocks = lapply(1:4, function(x) matrix(runif(47 * 5), 47, 5))
 #' setConnection (blocks, "data/connection.tsv")
 #' }
 #' @export setConnection
-setConnection = function(blocks, file = NULL, sep = "\t") {
+setConnection = function(blocks, superblock = FALSE, file = NULL, sep = "\t", h = FALSE, rownames = NULL) {
 
-  if (is.null(file)) {
+  J = length(blocks)
 
-    seq = 1:(length(blocks) - 1)
-    connection = matrix(0, length(blocks), length(blocks))
-    connection[length(blocks), seq] <- connection[seq, length(blocks)] <- 1
+  if(superblock){
+    connection <- matrix(0, J, J)
+    connection[1:J-1, J] = connection[J, 1:J-1] = 1
 
-  } else {
-    connection = loadData(file, sep, NULL, FALSE)
+  }else if (is.null(file))
+    connection = 1-diag(J)
+
+  else {
+    isXls <- (length(grep("xlsx?", file)) == 1)
+
+    if(!isXls)
+      connection = loadData(f = file, sep = sep, rownames = rownames,  h = h)
+    # else
+    #   connection = loadExcel(f = file, sheet = 1, rownames = rownames,  h = h)
   }
 
   checkConnection(connection, blocks)
@@ -292,12 +408,13 @@ setConnection = function(blocks, file = NULL, sep = "\t") {
 }
 
 
-#' Create a matrix from loading a file corresponding to the response
+#' Create a matrix corresponding to the response
 #'
 #' @param blocks A list of matrix
 #' @param file A character giving the path of a file used as a response
 #' @param sep A character giving the column separator
 #' @param header A bolean giving the presence or the absence of the header
+#' @param rownames An integer corresponding to the column number of the row names (NULL otherwise)
 #' @return A matrix corresponding to the response
 #' @examples
 #' \dontrun{
@@ -305,38 +422,41 @@ setConnection = function(blocks, file = NULL, sep = "\t") {
 #' setResponse (blocks, "data/response3.tsv")
 #' }
 #' @export setResponse
-setResponse = function(blocks, file = NULL, sep = "\t", header = TRUE) {
+setResponse = function(blocks, file = NULL, sep = "\t", header = TRUE, rownames = ROW_NAMES) {
 
   if (!is.null(file)) {
-    response = loadData(file, sep, ROW_NAMES, header)
 
-    if (NROW(blocks[[1]]) != NROW(response)) {
-      msg = paste("The number of rows of the response file (", NROW(response), ") is different from those of the blocks (", NROW(blocks[[1]]), ").", sep="")
-      if (header)
-        msg = paste(msg, MSG_HEADER, sep = "")
-      stop(paste(msg, "\n"), call. = FALSE)
-    }
+    isXls <- length(grep("xlsx?", file))
+
+    if(!isXls)
+      response = loadData(file, sep, rownames, header)
+    # else
+    #   response = loadExcel(file, 1, rownames, h = header, num = FALSE)
 
     qualitative = unique(isCharacter(response))
 
     if (length(qualitative) > 1)
-      stop("Please, select a response file with either qualitative data only or quantitative data only. The header must be disabled for quantitative data and activated for disjunctive table.\n",
-           call. = FALSE)
+      stop("Please, select a response file with either qualitative data only or quantitative data only.",
+           108)
+
+    if(!qualitative)
+      response = convertMatrixNumeric(response)
+
 
     if (NCOL(response) > 1) {
+
       disjunctive = unique(apply(response, 1, sum))
 
-      if (length(disjunctive) == 1 && unique(response %in% c(0, 1)) && disjunctive == 1) {
+      if (length(disjunctive) && unique(response %in% c(0, 1)) && disjunctive) {
         response2 = factor(apply(response, 1, which.max))
         if (header) {
           levels(response2) = colnames(response)
         }
-        response = as.character(response2)
+        response = as.matrix(data.frame(as.character(response2), row.names = rownames(response)))
 
       } else {
         response = response[, 1]
-        warning("There is multiple columns in the response file. By default, only the first one is taken in account.\n",
-                call. = FALSE)
+        warning("There is multiple columns in the response file. By default, only the first one is taken in account.")
       }
     }
 
@@ -361,18 +481,146 @@ setResponse = function(blocks, file = NULL, sep = "\t", header = TRUE) {
 #' @export isCharacter
 isCharacter = function(x) {
 
-  options(warn = -1)
   # is. character() consider a string with '1.2' as a character, not this
-  # function NA are produced by converting a character into an integer
+  # function. NA are produced by converting a character into an integer
   # as.vector, avoid factors of character in integer without NA
 
   # NA tolerance :
-  # x = na.omit(x)
-  if (is.matrix(x))
-    test = sapply(1:NCOL(x), function(i) unique(is.na(as.integer(as.vector(x[, i])))))
-  else
-    test = unique(is.na(as.integer(as.vector(x))))
 
-  options(warn = 0)
+  if (is.matrix(x)){
+    test = sapply(
+      1:NCOL(x),
+      function(i) unique(
+        is.na(
+          tryCatch(
+            as.integer(
+              na.omit(as.vector(x[, i])[as.vector(x[, i]) != "NA"])
+            ),
+            warning = function(w)
+              return(NA)
+          )
+        )
+      )
+    )
+  }else
+    test = unique(
+      is.na(
+        tryCatch(
+          as.integer(
+            na.omit(as.vector(x)[as.vector(x) != "NA"])
+          ),
+          warning = function(w)
+            return(NA)
+        )
+      )
+    )
+
   return(test)
+}
+
+#' Get the rows with the same names among a list of dataframe
+#'
+#' @param list_m A list of dataframe
+#' @return A vector of character with the common rownames
+#' @export commonRow
+commonRow = function(list_m){
+
+  common_row = row.names(list_m[[1]])
+
+  for ( i in 2:length(list_m) )
+    common_row = common_row[ common_row %in% row.names(list_m[[i]]) ]
+
+  return(common_row)
+}
+
+#' Keep only the rows with the same names among a list of dataframe
+#'
+#' @param list_m A list of dataframe
+#' @return A list of dataframe
+#' @export keepCommonRow
+keepCommonRow = function(list_m){
+
+  names = names(list_m)
+
+  common_row = commonRow(list_m)
+  list_m = lapply(1:length(list_m), function (x) list_m[[x]] = list_m[[x]][common_row,])
+
+  names(list_m) = names
+  return (list_m)
+}
+
+#' Remove column having a standard deviation equals to 0
+#'
+#' @param list_m A list of dataframe
+#' @return A list of dataframe
+#' @export removeColumnSdNull
+removeColumnSdNull = function(list_m) {
+
+  names = names(list_m)
+
+  column_sd_null = lapply(list_m, function (x) which( apply(x, 2, sd ) == 0 ))
+  blocks_index =  seq(1, length(list_m))[unlist(lapply(column_sd_null, function(x) length(x) > 0))]
+
+  list_m = lapply(1:length(list_m), function(x){
+
+    if( x %in% blocks_index)
+      list_m[[x]][, -column_sd_null[[x]]]
+    else
+      list_m[[x]]
+  })
+
+  names(list_m) = names
+  return (list_m)
+}
+
+setSuperblock = function(blocks, superblock = FALSE, type = "rgcca"){
+
+  if(superblock | tolower(type) == "pca"){
+
+    # if(type != "pca")
+    #   warnConnection("superblock")
+
+    blocks[["Superblock"]] = Reduce(cbind, blocks)
+
+  }
+
+  return(blocks)
+}
+
+setPosPar = function(opt, blocks, i_resp){
+
+  J = length(blocks)
+  opt$blocks = blocks
+  opt$block_names = names(blocks)
+
+  par = c("blocks", "block_names", "ncomp")
+  if (all(opt$tau != "optimal"))
+    par[length(par)+1] = "tau"
+
+  for (i in 1:length(par)){
+    temp = opt[[par[i]]][[J]]
+    opt[[par[i]]][[J]] = opt[[par[i]]][[i_resp]]
+    opt[[par[i]]][[i_resp]] = temp
+  }
+
+  names(opt$blocks) = opt$block_names
+
+  return(opt)
+}
+
+
+warnConnection = function(x)
+  warning(paste0("By using a ", x , ", all blocks are connected to this block in the connection matrix and the connection file is ignored."))
+
+checkSuperblock = function(opt){
+
+  if( ! is.null(opt$response) ){
+    warnConnection("supervized method with a response")
+    if( opt$superblock){
+      opt$superblock = FALSE
+      if("superblock" %in% names(opt))
+        warning("In a supervised mode, the superblock corresponds to the response.")
+    }
+  }
+  return(opt)
 }
