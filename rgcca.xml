@@ -6,6 +6,7 @@
         <import>macro.xml</import>
     </macros>
 
+    <!--o8 $R_result-->
     <command ><![CDATA[
         #set $data_paths = $block_1.file_name
         #set $data_names = $block_1.name
@@ -17,7 +18,7 @@
              --datasets "${$data_paths}"
              --names "${$data_names}"
              --directory $__tool_directory__
-             --o1 $samples_space --o2 $corcircle --o3 $fingerprint --o4 $ave --o5 $weights
+             --o1 $individual_plot --o2 $corcircle --o3 $top_variables --o4 $ave --o5 $design --o6 $individual_table --o7 $variable_table
              #if $parse.advanced
                 $parse.header
                 --separator $parse.separator
@@ -39,6 +40,7 @@
                 --compx $graphic.compx
                 --compy $graphic.compy
                 --nmark $graphic.nmark
+                --text $graphic.text
              #end if
     ]]></command>
 
@@ -114,16 +116,21 @@
             <param name="compy" type="integer" label="Component for the Y-axis" help="The component used in the Y-axis for biplots." value="2" min="1" max="5" />
             <param name="nmark" type="integer" label="Maximum number of bioimarkers" value="100" min="10" max="100"
                    help="The maximum number of top potential biomarkers (in fingerprint file)"/>
+            <param name="text" type="boolean" truevalue="" falsevalue="--text" checked="true" label="Display the name in individual plot"/>
         </when>
         </conditional>
     </inputs>
 
     <outputs>
-        <data name="samples_space" label="samples_space.pdf" format="pdf" />
+        <data name="individual_plot" label="individuals.pdf" format="pdf" />
         <data name="corcircle" label="corcircle.pdf" format="pdf" />
-        <data name="fingerprint"  label="fingerprint.pdf" format="pdf" />
+        <data name="top_variables"  label="top_variables.pdf" format="pdf" />
         <data name="ave"  label="ave.pdf" format="pdf" />
-        <data name="weights"  label="weights.csv" format="txt" />
+        <data name="design"  label="design.pdf" format="pdf" />
+        <data name="individual_table"  label="individuals.tsv" format="tsv" />
+        <data name="variable_table"  label="variables.tsv" format="tsv" />
+        <!--<data name="R_result"  label="rgcca.result.RData" format="RData" />-->
+
     </outputs>
 <help>
 
