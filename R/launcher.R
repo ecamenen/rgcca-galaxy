@@ -10,7 +10,7 @@
 # of the most explicative variables and the explained variance for each blocks.
 
 rm(list = ls())
-#graphics.off()
+graphics.off()
 
 ########## Arguments ##########
 
@@ -306,7 +306,7 @@ postCheckArg <- function(opt, blocks){
 
       if(opt[[x]] > length(blocks))
         stop(paste0("--", x, " must be lower than ", length(blocks), " (the maximum number of blocks), not be equal to ", opt[[x]], "."), exit_code = 133)
-      else if(opt$block == 0)
+      else if(opt[[x]] == 0)
         opt[[x]] <- length(blocks)
       else if(opt[[x]] < 0 )
         stop(paste0("--", x, " must be positive, not be equal to ", opt[[x]], "."), exit_code = 134)
@@ -435,8 +435,6 @@ tryCatch({
 
 # Load functions
 setwd(opt$directory)
-
-
 
 source("R/parsing.R")
 source("R/select.type.R")

@@ -6,8 +6,7 @@
         <import>macro.xml</import>
     </macros>
 
-    <!--o8 $R_result-->
-    <command ><![CDATA[
+    <command detect_errors="exit_code"><![CDATA[
         #set $data_paths = $block_1.file_name
         #set $data_names = $block_1.name
         #for $i, $s in enumerate( $dataset )
@@ -18,7 +17,7 @@
              --datasets "${$data_paths}"
              --names "${$data_names}"
              --directory $__tool_directory__
-             --o1 $individual_plot --o2 $corcircle --o3 $top_variables --o4 $ave --o5 $design --o6 $individual_table --o7 $variable_table
+             --o1 $individual_plot --o2 $corcircle --o3 $top_variables --o4 $ave --o5 $design --o6 $individual_table --o7 $variable_table --o8 $R_result
              #if $parse.advanced
                 $parse.header
                 --separator $parse.separator
@@ -29,36 +28,44 @@
                 --tau $analyse.tau
                 --ncomp $analyse.ncomp
                 --scheme $analyse.scheme
+                #if $analyse.method.family == "1"
+                    --type pca
+                #else
+                    --type $analyse.method.type
+                #end if
                 #if $analyse.connection.bool
                     -c $analyse.connection.file
                 #end if
-                #if $analyse.response.bool
-                    --group $analyse.response.file
+                #if $analyse.supervised.bool
+                    --response $analyse.supervised.block_response
                 #end if
              #end if
              #if $graphic.advanced
+                #if $graphic.response.bool
+                    --group $graphic.response.file
+                #end if
                 --compx $graphic.compx
                 --compy $graphic.compy
                 --nmark $graphic.nmark
                 --text $graphic.text
+                --block $graphic.blockx
+                --block_y $graphic.blocky
              #end if
     ]]></command>
 
     <inputs>
-    <param name="block_1" type="data" format="tsv,tabular,txt,csv" label="Block"/>
-           help="A file containing a matrix with the samples in lines (should be labelled) and variables in columns (should have a header)." />
+    <param name="block_1" type="data" format="tsv,tabular,txt,csv" label="Block"
+           help="CSV file containing a matrix with: (i) quantitative values only (decimal should be separated by '.'), (ii) the samples in lines (should be labelled in the 1rst column) and (iii) variables in columns (should have a header)."/>
     <repeat name="dataset" title="New block"
-            help="Additional block with a different structure than the first one. Each block will be analysed separately.
-            Expected format is a file containing a matrix with the samples in lines (should be labelled) and variables in columns
-            (should have a header)" >
-        <param name="block_n" type="data" format="tsv,tabular,txt,csv" label="Dataset" />
+            help="Additional block with a different structure than the first one. Each block will be analysed separately.">
+        <param name="block_n" type="data" format="tsv,tabular,txt,csv" label="Dataset"/>
     </repeat>
 
         <conditional name="parse">
             <param name="advanced" type="boolean" label="Customize parsing of the files" help="By default, on tabulated files with a header."/>
             <when value="true">
                 <param name="header" type="boolean" truevalue="" falsevalue="-H" checked="true" label="Consider the first row as header of columns"/>
-                <param name="separator" type="select" display="radio" label="Column separator" help="Character used to separate the column in the dataset (by default : tabulation). ">
+                <param name="separator" type="select" display="radio" label="Column separator" help="Character used to separate the column in the dataset. ">
                     <option value="1" selected="true">Tabulation</option>
                     <option value="2">Semicolon</option>
                 </param>
@@ -67,11 +74,12 @@
 
         <conditional name="analyse">
             <param name="advanced" type="boolean" label="Customize analysis settings"
-                   help="By default, the analysis : scales the blocks, initiates the algorithm with Singular Value Decomposition, uses a superblock with a factorial scheme function, a biased estimator of the variance, a tau equals to one and two components for each block."/>
+                   help="By default, the analysis: scales the blocks, uses a superblock with a factorial scheme function, a tau equals to one and two components for each block."/>
             <when value="true">
+
                 <conditional name="connection">
                     <param name="bool" type="boolean"
-                           label="Modify the design matrix (describes the relationships between blocks)" />
+                           label="Modify the design matrix (describes the relations between blocks)"/>
                     <when value="true">
                         <param name="file" type="data" format="tsv,tabular,txt,csv" label="Design matrix"
                                help="The design matrix is a symmetric matrix of non-negative elements describing the network of connections
@@ -80,57 +88,111 @@
                                 interpret the results. By default, the connection matrix is build with 1 values for the last line (and column) except
                                 for the diagonal (i.e., the superblock is fully connected with the other blocks) and 0 values for the other cells
                                 (the blocks are not connected together). To go further than his null hypothesis, a priori information could be used
-                                 to tune the matrix (e.g., add 1 value for a connection between two block)." />
+                                 to tune the matrix (e.g., add 1 value for a connection between two block)."/>
                     </when>
                 </conditional>
-                <conditional name="response">
-                    <param name="bool" type="boolean" label="Color the samples according to their group of response"/>
-                    <when value="true">
-                        <param name="file" type="data" format="tsv,tabular,txt,csv" label="Groups of response"
-                           help="A file containing an only column of either a qualitative, or a quantitative variable or multiple columns containing a disjunctive table." />
-                    </when>
-                </conditional>
+
                 <param name="superblock" type="boolean" truevalue="" falsevalue="--superblock" checked="true" label="Use a superblock"
                        help="A concatenation of all the blocks to better interpret the results."/>
+
+                <conditional name="supervised">
+                    <param name="bool" type="boolean" label="Supervised analysis"/>
+                    <when value="true">
+                        <param name="block_response" type="integer" value="0" min="0" max="10" label="Response block"/>
+                    </when>
+                </conditional>
+
+
                 <param name="scale" type="boolean" truevalue="" falsevalue="--scale" checked="true" label="Scale the blocks"
                        help="Standardize each block to zero means and unit variances and then divide them by the square root of its number of variables."/>
                 <param name="tau" type="float" label="Tau parameter in RGCCA" value="1" min="0" max="1"
-                       help="A tau near 0 maximize the covariance in each blocks whereas a tau near 1 maximize the correlation between the blocks." />
+                       help="A tau near 0 maximize the covariance in each blocks whereas a tau near 1 maximize the correlation between the blocks."/>
                 <param name="ncomp" type="integer" label="Number of component" value="2" min="2" max="5"
-                       help="The number of component to use in the analysis for each block (should not be greater than the minimum number of variable among the blocks)." />
-                <param name="scheme" type="select" label="Scheme function" help="The identity (horst scheme) maximizes the sum of covariances between block components. The absolute value (centroid scheme) maximizes of the sum
-                of the absolute values of the covariances. The square function (factorial scheme) maximizes the sum of squared covariances,
-                or, more generally, for any even integer m, g(x)=x^m (m-scheme), maximizes the power of m of the sum of covariances.">
-                    <option value="1">Horst : f(x) </option>
-                    <option value="2" selected="true">Factorial : f(x)^2 </option>
-                    <option value="3">Centroid : f|x| </option>
+                       help="The number of component to use in the analysis for each block (should not be greater than the minimum number of variable among the blocks)."/>
+
+                <param name="scheme" type="select" label="Scheme function" help="The identity (horst scheme) maximizes the sum of covariances between block components. The absolute value (centroid scheme) maximizes of the sum of the absolute values of the covariances. The square function (factorial scheme) maximizes the sum of squared covariances, or, more generally, for any even integer m, g(x)=x^m (m-scheme), maximizes the power of m of the sum of covariances.">
+                    <option value="1">Horst : f(x)</option>
+                    <option value="2" selected="true">Factorial : f(x)^2</option>
+                    <option value="3">Centroid : f|x|</option>
                     <option value="4">Other: f(x)^4</option>
                 </param>
+
+                <conditional name="method">
+
+                    <param name="family" type="select" label="Family method">
+                        <option value="1">One block</option>
+                        <option value="2">Two blocks</option>
+                        <option value="m" selected="true">Multiple blocks</option>
+                        <option value="ms">Multiple blocks with superblock</option>
+                    </param>
+
+                    <when value="2">
+                        <param name="type" type="select" label="Two blocks methods">
+                            <option value="pls">Partial Least Squares Regression</option>
+                            <option value="cca">Canonical Correlation Analysis</option>
+                            <option value="ifa">Interbattery Factor Analysis</option>
+                            <option value="ra">Redundancy analysis</option>
+                        </param>
+                    </when>
+
+                    <when value="m">
+                        <param name="type" type="select" label="Multiple blocks">
+                            <option value="rgcca">Regularized Generalized CCA</option>
+                            <option value="sgcca">Sparse Generalized CCA</option>
+                            <option value="sumcor">SUM of CORrelations method</option>
+                            <option value="ssqcor">Sum of SQuared CORrelations method</option>
+                            <option value="sabscor">Sum of ABSolute value CORrelations method</option>
+                            <option value="sumcov">SUM of COVariances method</option>
+                            <option value="ssqcov">Sum of SQuared COVariances method</option>
+                            <option value="sabscov">Sum of ABSolute value COVariances method</option>
+                            <option value="maxbet">MAXBET</option>
+                            <option value="maxbet-b">MAXBET-B</option>
+                        </param>
+                    </when>
+
+                    <when value="ms">
+                        <param name="type" type="select" label="Multiple blocks with superblock">
+                            <option value="gcca">Generalized CCA</option>
+                            <option value="hpca">Hierarchical PCA</option>
+                            <option value="mfa">Multiple Factor Analysis</option>
+                        </param>
+                    </when>
+
+                </conditional>
             </when>
         </conditional>
 
         <conditional name="graphic">
-        <param name="advanced" type="boolean" label="Customize graphic settings" help="By default, the x-axis and y-axis are respectively the first and the second components, the number of top biomarkers is 100."/>
+        <param name="advanced" type="boolean" label="Customize graphic settings" help="By default, the x-axis and y-axis are respectively the first and the second components, the number of top variables is 100 and the block selected is the superblock or the last one."/>
         <when value="true">
-            <param name="compx" type="integer" label="Component for the X-axis" help="The component used in the X-axis for biplots and the only component used for histograms." value="1" min="1" max="5" />
-            <param name="compy" type="integer" label="Component for the Y-axis" help="The component used in the Y-axis for biplots." value="2" min="1" max="5" />
-            <param name="nmark" type="integer" label="Maximum number of bioimarkers" value="100" min="10" max="100"
+            <conditional name="response">
+                <param name="bool" type="boolean" label="Color the samples according to their group of response"/>
+                <when value="true">
+                    <param name="file" type="data" format="tsv,tabular,txt,csv" label="Response variable"
+                           help="A file containing an only column of either a qualitative, or a quantitative variable or multiple columns containing a disjunctive table."/>
+                </when>
+            </conditional>
+            <param name="text" type="boolean" truevalue="" falsevalue="--text" checked="true" label="Display the names in individual plot"/>
+            <param name="compx" type="integer" label="Component for the X-axis" help="The component used in the X-axis for biplots and the only component used for histograms." value="1" min="1" max="5"/>
+            <param name="compy" type="integer" label="Component for the Y-axis" help="The component used in the Y-axis for biplots." value="2" min="1" max="5"/>
+            <param name="blockx" type="integer" value="0" min="0" max="10" label="Block for the X-axis"/>
+            <param name="blocky" type="integer" value="0" min="0" max="10" label="Block for the Y-axis"/>
+            <param name="nmark" type="integer" label="Number of top variables" value="100" min="10" max="100"
                    help="The maximum number of top potential biomarkers (in fingerprint file)"/>
-            <param name="text" type="boolean" truevalue="" falsevalue="--text" checked="true" label="Display the name in individual plot"/>
         </when>
         </conditional>
+
     </inputs>
 
     <outputs>
-        <data name="individual_plot" label="individuals.pdf" format="pdf" />
-        <data name="corcircle" label="corcircle.pdf" format="pdf" />
-        <data name="top_variables"  label="top_variables.pdf" format="pdf" />
-        <data name="ave"  label="ave.pdf" format="pdf" />
-        <data name="design"  label="design.pdf" format="pdf" />
-        <data name="individual_table"  label="individuals.tsv" format="tsv" />
-        <data name="variable_table"  label="variables.tsv" format="tsv" />
-        <!--<data name="R_result"  label="rgcca.result.RData" format="RData" />-->
-
+        <data name="individual_plot" label="individuals.pdf on ${tool.name}" format="pdf"/>
+        <data name="corcircle" label="corcircle.pdf" format="pdf"/>
+        <data name="top_variables"  label="top_variables.pdf" format="pdf"/>
+        <data name="ave"  label="ave.pdf" format="pdf"/>
+        <data name="design"  label="design.pdf" format="pdf"/>
+        <data name="individual_table"  label="individuals.tsv" format="tsv"/>
+        <data name="variable_table"  label="variables.tsv" format="tsv"/>
+        <data name="R_result"  label="rgcca.result.RData" format="rdata"/>
     </outputs>
 <help>
 
@@ -140,7 +202,7 @@ ABOUT
 
 
 **Authors:**
-Arthur TENENHAUS, Vincent GUILLEMOT, Etienne CAMENEN
+Etienne CAMENEN, Arthur TENENHAUS, Vincent GUILLEMOT
 
 
 **Contact:**
