@@ -21,6 +21,9 @@
             :target: https://gitlab.icm-institute.org/etienne.camenen/rgcca_galaxy/raw/feature/proofConcept/img/top_variables.png
 ]]></token>
 
+    <token name="@BLOCK_RULES@">0 corresponds to the superblock (or the last block loaded), 1 to the first block, 2 to the second one, etc. This number should not be greater than the number of blocks selected.</token>
+
+    <token name="@COMP_RULES@">This number should not be greater than the selected number of component (2, by default).</token>
 
 </macros>
 

@@ -17,7 +17,7 @@
              --datasets "${$data_paths}"
              --names "${$data_names}"
              --directory $__tool_directory__
-             --o1 $individual_plot --o2 $corcircle --o3 $top_variables --o4 $ave --o5 $design --o6 $individual_table --o7 $variable_table --o8 $R_result
+             --o1 $individual_plot --o2 $corcircle --o3 $top_variables --o4 $ave --o5 $design --o6 $individual_table --o7 $variable_table --o8 $R_results
              #if $parse.advanced
                 $parse.header
                 --separator $parse.separator
@@ -54,7 +54,7 @@
     ]]></command>
 
     <inputs>
-    <param name="block_1" type="data" format="tsv,tabular,txt,csv" label="Block"
+    <param name="block_1" type="data" format="tsv,tabular,txt,csv" label="Load a block"
            help="CSV file containing a matrix with: (i) quantitative values only (decimal should be separated by '.'), (ii) the samples in lines (should be labelled in the 1rst column) and (iii) variables in columns (should have a header)."/>
     <repeat name="dataset" title="New block"
             help="Additional block with a different structure than the first one. Each block will be analysed separately.">
@@ -65,7 +65,7 @@
             <param name="advanced" type="boolean" label="Customize parsing of the files" help="By default, on tabulated files with a header."/>
             <when value="true">
                 <param name="header" type="boolean" truevalue="" falsevalue="-H" checked="true" label="Consider the first row as header of columns"/>
-                <param name="separator" type="select" display="radio" label="Column separator" help="Character used to separate the column in the dataset. ">
+                <param name="separator" type="select" display="radio" label="Column separator" help="Character used to separate the column in the dataset.">
                     <option value="1" selected="true">Tabulation</option>
                     <option value="2">Semicolon</option>
                 </param>
@@ -74,43 +74,39 @@
 
         <conditional name="analyse">
             <param name="advanced" type="boolean" label="Customize analysis settings"
-                   help="By default, the analysis: scales the blocks, uses a superblock with a factorial scheme function, a tau equals to one and two components for each block."/>
+                   help="By default, the analysis: is a Regularised Generalised Canonical Correlation Analysis, scales the blocks, uses a superblock with a factorial scheme function, a tau equals to one and two components for each block."/>
             <when value="true">
 
                 <conditional name="connection">
                     <param name="bool" type="boolean"
-                           label="Modify the design matrix (describes the relations between blocks)"/>
+                           label="Load the design matrix (if superblock or supervised disabled)"/>
                     <when value="true">
-                        <param name="file" type="data" format="tsv,tabular,txt,csv" label="Design matrix"
-                               help="The design matrix is a symmetric matrix of non-negative elements describing the network of connections
-                                between blocks that the user wants to take into account. Its dimension should be (NB_BLOCKS + 1) * (NB_BLOCKS + 1).
-                                + 1 corresponds for the use of a supplementary block (the 'superblock'), a concatenation of all the blocks helpful to
-                                interpret the results. By default, the connection matrix is build with 1 values for the last line (and column) except
-                                for the diagonal (i.e., the superblock is fully connected with the other blocks) and 0 values for the other cells
-                                (the blocks are not connected together). To go further than his null hypothesis, a priori information could be used
-                                 to tune the matrix (e.g., add 1 value for a connection between two block)."/>
+                        <param name="file" type="data" format="tsv,tabular,txt,csv" label=" "
+                               help="CSV file without header and without row names. This file describes the connections between the blocks. It should contain 1 (if two blocks are related) or 0 values otherwise. The columns are separated by tabulations. It is a symmetric matrix with the same dimension as the number of blocks"/>
                     </when>
                 </conditional>
 
                 <param name="superblock" type="boolean" truevalue="" falsevalue="--superblock" checked="true" label="Use a superblock"
-                       help="A concatenation of all the blocks to better interpret the results."/>
+                       help="A block defined as the concatenation of all the other blocks. The space spanned by global components is viewed as a compromise space that integrated all the modalities and facilitates the visualization of the results and their interpretation. If disabled, all blocks are assumed to be connected or a connection file could be used. "/>
 
                 <conditional name="supervised">
-                    <param name="bool" type="boolean" label="Supervised analysis"/>
+                    <param name="bool" type="boolean" label="Use a block as response (supervised analysis)"/>
                     <when value="true">
-                        <param name="block_response" type="integer" value="0" min="0" max="10" label="Response block"/>
+                        <param name="block_response" type="integer" value="0" min="0" max="10" label=" " help="@BLOCK_RULES@"/>
                     </when>
                 </conditional>
 
 
                 <param name="scale" type="boolean" truevalue="" falsevalue="--scale" checked="true" label="Scale the blocks"
-                       help="Standardize each block to zero means and unit variances and then divide them by the square root of its number of variables."/>
+                       help="A data centering step is always performed. If activated, each block is normalised and divided by the square root of its number of variables."/>
                 <param name="tau" type="float" label="Tau parameter in RGCCA" value="1" min="0" max="1"
-                       help="A tau near 0 maximize the covariance in each blocks whereas a tau near 1 maximize the correlation between the blocks."/>
+                       help="A regularization parameter for each block (i.e., tau) [default: 1]. Tau varies from 0 (maximizing the correlation) to 1 (maximizing the covariance). If a SGCCA method is selected, tau is automatically set to 1. A shrinkage parameter can be defined instead for automatic variable selection, varying from the square root of the variable number (the fewest selected variables) to 1 (all the variables are included)."/>
                 <param name="ncomp" type="integer" label="Number of component" value="2" min="2" max="5"
                        help="The number of component to use in the analysis for each block (should not be greater than the minimum number of variable among the blocks)."/>
 
-                <param name="scheme" type="select" label="Scheme function" help="The identity (horst scheme) maximizes the sum of covariances between block components. The absolute value (centroid scheme) maximizes of the sum of the absolute values of the covariances. The square function (factorial scheme) maximizes the sum of squared covariances, or, more generally, for any even integer m, g(x)=x^m (m-scheme), maximizes the power of m of the sum of covariances.">
+                <param name="scheme" type="select" label="Scheme function" help="Link (i.e. scheme) function for covariance maximization is calculated with: the identity function (horst scheme),
+    the absolute values (centroid scheme), the squared values (factorial scheme). Only, the horst scheme penalizes structural
+    negative correlation. The factorial scheme discriminates more strongly the blocks than the centroid one.">
                     <option value="1">Horst : f(x)</option>
                     <option value="2" selected="true">Factorial : f(x)^2</option>
                     <option value="3">Centroid : f|x|</option>
@@ -119,7 +115,7 @@
 
                 <conditional name="method">
 
-                    <param name="family" type="select" label="Family method">
+                    <param name="family" type="select" label="Analysis method">
                         <option value="1">One block</option>
                         <option value="2">Two blocks</option>
                         <option value="m" selected="true">Multiple blocks</option>
@@ -127,7 +123,7 @@
                     </param>
 
                     <when value="2">
-                        <param name="type" type="select" label="Two blocks methods">
+                        <param name="type" type="select" label=" ">
                             <option value="pls">Partial Least Squares Regression</option>
                             <option value="cca">Canonical Correlation Analysis</option>
                             <option value="ifa">Interbattery Factor Analysis</option>
@@ -136,7 +132,7 @@
                     </when>
 
                     <when value="m">
-                        <param name="type" type="select" label="Multiple blocks">
+                        <param name="type" type="select" label=" ">
                             <option value="rgcca">Regularized Generalized CCA</option>
                             <option value="sgcca">Sparse Generalized CCA</option>
                             <option value="sumcor">SUM of CORrelations method</option>
@@ -151,7 +147,7 @@
                     </when>
 
                     <when value="ms">
-                        <param name="type" type="select" label="Multiple blocks with superblock">
+                        <param name="type" type="select" label=" ">
                             <option value="gcca">Generalized CCA</option>
                             <option value="hpca">Hierarchical PCA</option>
                             <option value="mfa">Multiple Factor Analysis</option>
@@ -163,22 +159,21 @@
         </conditional>
 
         <conditional name="graphic">
-        <param name="advanced" type="boolean" label="Customize graphic settings" help="By default, the x-axis and y-axis are respectively the first and the second components, the number of top variables is 100 and the block selected is the superblock or the last one."/>
+        <param name="advanced" type="boolean" label="Customize graphic settings" help="By default, the x-axis and y-axis are respectively the first and the second components, the number of top variables is 100 and a superblock is used."/>
         <when value="true">
             <conditional name="response">
-                <param name="bool" type="boolean" label="Color the samples according to their group of response"/>
+                <param name="bool" type="boolean" label="Color the individual plot with a response variable"/>
                 <when value="true">
-                    <param name="file" type="data" format="tsv,tabular,txt,csv" label="Response variable"
-                           help="A file containing an only column of either a qualitative, or a quantitative variable or multiple columns containing a disjunctive table."/>
+                    <param name="file" type="data" format="tsv,tabular,txt,csv" label=" "
+                           help="A CSV file containing either: (i) an only column with a qualitative or a quantitative variable; (ii) multiple columns corresponding to a disjunctive table."/>
                 </when>
             </conditional>
-            <param name="text" type="boolean" truevalue="" falsevalue="--text" checked="true" label="Display the names in individual plot"/>
-            <param name="compx" type="integer" label="Component for the X-axis" help="The component used in the X-axis for biplots and the only component used for histograms." value="1" min="1" max="5"/>
-            <param name="compy" type="integer" label="Component for the Y-axis" help="The component used in the Y-axis for biplots." value="2" min="1" max="5"/>
-            <param name="blockx" type="integer" value="0" min="0" max="10" label="Block for the X-axis"/>
-            <param name="blocky" type="integer" value="0" min="0" max="10" label="Block for the Y-axis"/>
-            <param name="nmark" type="integer" label="Number of top variables" value="100" min="10" max="100"
-                   help="The maximum number of top potential biomarkers (in fingerprint file)"/>
+            <param name="text" type="boolean" truevalue="" falsevalue="--text" checked="true" label="Display the names of the points (in biplots)"/>
+            <param name="compx" type="integer" label="Component for the X-axis" help="The component used in the X-axis for biplots and the only component used for top variable plot. @COMP_RULES@" value="1" min="1" max="5"/>
+            <param name="compy" type="integer" label="Component for the Y-axis" help="The component used in the Y-axis for biplots. @COMP_RULES@" value="2" min="1" max="5"/>
+            <param name="blockx" type="integer" value="0" min="0" max="10" label="Visualise this block" help="Block used in the X-axis for individual plot and the only block used for corcircle and top variable plots. @BLOCK_RULES@"/>
+            <param name="blocky" type="integer" value="0" min="0" max="10" label="Visualise this block for the Y-axis (in individual plot)" help="@BLOCK_RULES@"/>
+            <param name="nmark" type="integer" label="Number of top variables" value="100" min="10" max="100"/>
         </when>
         </conditional>
 
@@ -192,7 +187,7 @@
         <data name="design"  label="design.pdf" format="pdf"/>
         <data name="individual_table"  label="individuals.tsv" format="tsv"/>
         <data name="variable_table"  label="variables.tsv" format="tsv"/>
-        <data name="R_result"  label="rgcca.result.RData" format="rdata"/>
+        <data name="R_results"  label="rgcca.result.RData" format="rdata"/>
     </outputs>
 <help>
 
@@ -201,8 +196,8 @@ ABOUT
 ==================================
 
 
-**Authors:**
-Etienne CAMENEN, Arthur TENENHAUS, Vincent GUILLEMOT
+**Author:**
+Etienne CAMENEN
 
 
 **Contact:**
@@ -215,45 +210,20 @@ The RGCCA package is available from the CRAN repository (https://cran.r-project.
 ---------------------------------------------------
 
 ==================================
-RGCCA
+R/SGCCA
 ==================================
 
-**Description**
-
-We consider J data matrices X1 ,..., XJ.  Each n × pj data matrix Xj = [ xj1, ..., xjpj ] is called a block and represents a set
-of pj variables observed on n individuals. The number and the nature of the variables may differ from one block to another,
-but the individuals must be the same across blocks. We assume that all variables are centered. The objective of RGCCA is to find,
-for each block, a weighted composite of variables (called block component) yj = Xjaj, j = 1 ,..., J (where a j is a column-vector with pj
-elements) summarizing the relevant information between and within the blocks. The block components are obtained such that (i) block
-components explain well their own block and/or (ii) block components that are assumed to be connected are highly correlated.
-As a component-based method, RGCCA can provide users with graphical representations to visualize the sources
-of variability within blocks and the amount of correlation between blocks.
-
-**Input file**
-
-- *blocks* (.tsv, .csv or .txt) : tabulated files containing variables to analyse together. The samples should be in lines and labelled and variables in columns with a header.
-- *connection* (.tsv, .csv or .txt) : tabulated files without header, containing a symmetric matrix with either 0 or 1 for a connection between each block.
-- *response* (.tsv, .csv or .txt) : an only column of a qualitative variable.
+A user-friendly multi-blocks analysis (Regularized Generalized Canonical Correlation Analysis, RGCCA) as described in [1] and [2] with all default settings predefined. The software produces figures to explore the analysis' results: individuals and variables projected on two components of the multi-block analysis, list of top variables and explained variance in the model.
 
 **Working example**
 
     | From Russett data (RGCCA package) : https://github.com/BrainAndSpineInstitute/rgcca_Rpackage/tree/master/data
     | Use *agriculture.tsv* as dataset. Add *industry.tsv* and *politic.tsv* as new dataset. Eventually, use *response.tsv* as group of response in analysis custom settings.
 
-**Output files**
-
-- *corcircle* (.pdf) : samples projected in a space composed by the first two components of the analysis (with the percent of explained variance). By selecting a response, samples are colored according to this criterion.
-- *samples_space* (.pdf) : circle of correlation of variables with the first two components of the analysis (with the percent of  explained variance). The dotted circle corresponds to a 0.5 correlation and the full one corresponds to a 1 correlation.
-- *fingerprint* (.pdf) : 100 best biomarkers for a set of blocks according to the weight of these variables in the analysis (eigen value for PCA, canonical variable for CCA, component for PLS and RGCCA).
-- *ave* (.pdf) : average variance explained (in %) in the model for each block ranked decreasingly.
-
-<![CDATA[
-
-@VARIABLES_IMG@
-@SAMPLES_IMG@
-@BIOMARKERS_IMG@
-
-]]>
+**Documentation**
+- RGCCA: https://cran.r-project.org/web/packages/RGCCA/vignettes/vignette_RGCCA.pdf
+- accepted input / output formats: https://github.com/BrainAndSpineInstitute/rgcca_Rpackage#input-files
+- tutorial:
 
 </help>
 
