@@ -1,4 +1,10 @@
+
+Rplots\.pdf
+
+tool_test_output\.html
+
+tool_test_output\.json
+
 \.Rhistory
-*.pdf
-*.tsv
-*.RData
+
+\.idea/

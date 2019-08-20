@@ -1,0 +1,16 @@
+language: python
+
+before_install:
+  - sudo apt-get install -y python-virtualenv
+  - virtualenv planemo-venv
+  - . planemo-venv/bin/activate
+  - pip install planemo==0.58.1
+
+install:
+  - for LINK in $(find ${TRAVIS_BUILD_DIR}/test-data/
+  - type l -exec ls {} \;); do REALPATH=$(readlink -f $LINK); rm -f $LINK;
+  cp $REALPATH $LINK; done
+
+script:
+  - planemo lint ${TRAVIS_BUILD_DIR}
+  - planemo test ${TRAVIS_BUILD_DIR}
