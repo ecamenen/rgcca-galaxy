@@ -4,13 +4,9 @@ before_install:
   - sudo apt-get install -y python-virtualenv
   - virtualenv planemo-venv
   - . planemo-venv/bin/activate
-  - pip install planemo==0.58.1
-
-install:
-  - for LINK in $(find ${TRAVIS_BUILD_DIR}/test-data/
-  - type l -exec ls {} \;); do REALPATH=$(readlink -f $LINK); rm -f $LINK;
-  cp $REALPATH $LINK; done
+  - pip install --upgrade pip setuptools
+  - pip install planemo==0.47.0
 
 script:
-  - planemo lint ${TRAVIS_BUILD_DIR}
-  - planemo test ${TRAVIS_BUILD_DIR}
+  - planemo lint ${TRAVIS_BUILD_DIR}/
+  - planemo test --conda_auto_init --conda_auto_install --conda_dependency_resolution --galaxy_branch release_17.05 --no_cache_galaxy ${TRAVIS_BUILD_DIR}/
