@@ -6,7 +6,11 @@
         <import>macro.xml</import>
     </macros>
 
-    <command detect_errors="aggressive"><![CDATA[
+    <stdio>
+        <exit_code range="1" level="fatal" />
+    </stdio>
+
+    <command ><![CDATA[
         #set $data_paths = $block_1.file_name
         #set $data_names = $block_1.name
         #for $i, $s in enumerate( $dataset )
@@ -181,8 +185,8 @@ negative correlation. The factorial scheme discriminates more strongly the block
     </outputs>
 
     <tests>
-        <test expect_num_outputs="8">
-            <param name="block_1" value="agriculture.tsv" ftype="pdf"/>
+        <test expect_num_outputs="8" expect_exit_code="0">
+            <param name="block_1" value="agriculture.tsv" />
             <output name="individual_plot" file="individuals.pdf" ftype="pdf"/>
             <output name="top_variables" file="top_variables.pdf" ftype="pdf"/>
             <output name="corcircle" file="corcircle.pdf" ftype="pdf"/>
@@ -208,7 +212,6 @@ negative correlation. The factorial scheme discriminates more strongly the block
             </output>
         </test>
     </tests>
-
 <help>
 
 ==================================

@@ -106,7 +106,7 @@ getArgs <- function(){
       opt_str = "--scale",
       type = "logical",
       action = "store_false",
-      help = "DO NOT scale the blocks (i.e., a data centering step is always performed). Otherwise, each block is normalised and divided by the square root of its number of variables."
+      help = "DO NOT scale the blocks (i.e., a data centering step is always performed). Otherwhise, each block is normalised and divided by the square root of its number of variables."
     ),
     make_option(
       opt_str = "--superblock",
