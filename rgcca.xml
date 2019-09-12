@@ -196,7 +196,7 @@ negative correlation. The factorial scheme discriminates more strongly the block
                 <assert_contents>
                     <has_n_columns n="4"/>
                     <has_line_matching
-                            expression='"agriculture.axis1"\s"agriculture.axis2"\s"Superblock.axis1"\s"Superblock.axis2"'/>
+                            expression='"agriculture.axis1"\s"agriculture.axis2"\s"superblock.axis1"\s"superblock.axis2"'/>
                     <has_line_matching
                             expression='^.+(\s\-?\d+.\d+){4}$'/>
                 </assert_contents>
