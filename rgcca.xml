@@ -6,6 +6,15 @@
         <import>macro.xml</import>
     </macros>
 
+    <requirements>
+        <requirement type="package" version="2.1.2">r-rgcca</requirement>
+        <requirement type="package" version="3.2.1">r-ggplot2</requirement>
+        <requirement type="package" version="1.6.4">r-optparse</requirement>
+        <requirement type="package" version="1.0.0">r-scales</requirement>
+        <requirement type="package" version="1.2.4.1">r-igraph</requirement>
+        <requirement type="package" version="0.8.1">r-ggrepel</requirement>
+    </requirements>
+
     <stdio>
         <exit_code range="1" level="fatal" />
     </stdio>
@@ -187,11 +196,7 @@ negative correlation. The factorial scheme discriminates more strongly the block
     <tests>
         <test expect_num_outputs="8" expect_exit_code="0">
             <param name="block_1" value="agriculture.tsv" />
-            <output name="individual_plot" file="individuals.pdf" ftype="pdf"/>
-            <output name="top_variables" file="top_variables.pdf" ftype="pdf"/>
-            <output name="corcircle" file="corcircle.pdf" ftype="pdf"/>
-            <output name="ave" file="ave.pdf" ftype="pdf"/>
-            <output name="R_results" file="rgcca.result.RData" compare="sim_size" delta="1000" ftype="rdata"/>
+            <expand macro="output_tests" />
             <output name="individual_table" >
                 <assert_contents>
                     <has_n_columns n="4"/>
@@ -199,15 +204,6 @@ negative correlation. The factorial scheme discriminates more strongly the block
                             expression='"agriculture.axis1"\s"agriculture.axis2"\s"superblock.axis1"\s"superblock.axis2"'/>
                     <has_line_matching
                             expression='^.+(\s\-?\d+.\d+){4}$'/>
-                </assert_contents>
-            </output>
-            <output name="variable_table" >
-                <assert_contents>
-                    <has_n_columns n="5"/>
-                    <has_line_matching
-                            expression='"cor.axis.1"\s"cor.axis.2"\s"weight.axis.1"\s"weight.axis.2"\s"block"'/>
-                    <has_line_matching
-                            expression='^.+(\s\-?\d+.\d+){4}.+$'/>
                 </assert_contents>
             </output>
         </test>

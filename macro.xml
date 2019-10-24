@@ -4,5 +4,22 @@
 
     <token name="@COMP_RULES@">This number should not be greater than the selected number of component (2, by default).</token>
 
+    <xml name="output_tests" token_path="">
+        <output name="individual_plot" file="@PATH@individuals.pdf" ftype="pdf"/>
+        <output name="top_variables" file="@PATH@top_variables.pdf" ftype="pdf"/>
+        <output name="corcircle" file="@PATH@corcircle.pdf" ftype="pdf"/>
+        <output name="ave" file="@PATH@ave.pdf" ftype="pdf"/>
+        <output name="R_results" file="@PATH@rgcca.result.RData" compare="sim_size" delta="1000" ftype="rdata"/>
+        <output name="variable_table" >
+            <assert_contents>
+                <has_n_columns n="5"/>
+                <has_line_matching
+                        expression='"cor.axis.1"\s"cor.axis.2"\s"weight.axis.1"\s"weight.axis.2"\s"block"'/>
+                <has_line_matching
+                        expression='^.+(\s\-?\d+.\d+){4}.+$'/>
+            </assert_contents>
+        </output>
+    </xml>
+
 </macros>
 

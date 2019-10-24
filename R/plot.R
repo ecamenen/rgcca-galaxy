@@ -616,7 +616,8 @@ plotSpace <- function(
             legend.key.width = unit(nchar(name_group), "mm"),
             axis.text = element_blank(),
             axis.title.y = axis(margin(0, 20, 0, 0)),
-            axis.title.x = axis(margin(20, 0, 0, 0))
+            axis.title.x = axis(margin(20, 0, 0, 0)),
+            axis.line = element_blank()
         )
 
     if (length(unique(group)) != 1 && title == "Variable") {
