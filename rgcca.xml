@@ -194,8 +194,9 @@ negative correlation. The factorial scheme discriminates more strongly the block
     </outputs>
 
     <tests>
+
         <test expect_num_outputs="8" expect_exit_code="0">
-            <expand macro="output_tests" path="1block" />
+            <expand macro="output_tests" path="1block"/>
             <output name="individual_table" >
                 <assert_contents>
                     <has_n_columns n="4"/>
@@ -206,17 +207,76 @@ negative correlation. The factorial scheme discriminates more strongly the block
                 </assert_contents>
             </output>
         </test>
+
         <test expect_num_outputs="8" expect_exit_code="0">
-            <param name="1block" value="agriculture.tsv" />
+            <expand macro="output_tests" path="3blocks_connection"/>
+            <expand macro="output_tests_3blocks"/>
+            <section name="analyse">
+                <conditional name="connection">
+                    <param name="bool" value="true"/>
+                    <param name="file" value="connection.tsv"/>
+                </conditional>
+                <param name="superblock" value="false"/>
+            </section>
+            <assert_command has_text="-c "/>
+        </test>
+
+        <test expect_num_outputs="8" expect_exit_code="0">
+            <expand macro="output_tests" path="3blocks_supervised"/>
+            <expand macro="output_tests_3blocks"/>
+            <section name="analyse">
+                <param name="superblock" value="false"/>
+                <conditional name="supervised" >
+                    <param name="bool" value="true"/>
+                    <param name="block_response" value="3"/>
+                </conditional>
+            </section>
+            <assert_command has_text="--response 3"/>
+        </test>
+
+        <test expect_num_outputs="8" expect_exit_code="0">
+            <expand macro="output_tests" path="3blocks"/>
+            <expand macro="output_tests_3blocks"/>
+        </test>
+
+        <test expect_num_outputs="8" expect_exit_code="0">
+            <expand macro="output_tests" path="3blocks_sgcca"/>
+            <expand macro="output_tests_3blocks"/>
+            <section name="analyse">
+                <conditional name="method">
+                    <param name="family" value="m"/>
+                    <param name="type" value="sgcca"/>
+                </conditional>
+            </section>
+            <assert_command has_text="sgcca"/>
+        </test>
+
+        <test expect_num_outputs="8" expect_exit_code="0">
+            <expand macro="output_tests" path="2blocks"/>
             <repeat name="dataset">
-                <param name="block_n" value="industry.tsv"/>
                 <param name="block_n" value="politic.tsv"/>
             </repeat>
             <section name="analyse">
-                <param name="tau" value="0.6"/>
+                <param name="scale" value="false"/>
+                <param name="tau" value="0"/>
+                <param name="scheme" value="3"/>
+                <param name="ncomp" value="3"/>
+                <conditional name="method">
+                    <param name="family" value="2"/>
+                    <param name="type" value="pls"/>
+                </conditional>
             </section>
-            <assert_stdout has_text="" />
+            <section name="graphic">
+                <param name="text" value="false"/>
+                <param name="compx" value="3"/>
+                <param name="compy" value="1"/>
+                <param name="blockx" value="2"/>
+                <param name="blocky" value="1"/>
+                <param name="nmark" value="11"/>
+            </section>
+            <assert_command has_text="pls"/>
         </test>
+
     </tests>
 <help>
 

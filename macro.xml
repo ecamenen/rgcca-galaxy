@@ -10,6 +10,7 @@
         <output name="top_variables" file="@PATH@/top_variables.pdf" ftype="pdf"/>
         <output name="corcircle" file="@PATH@/corcircle.pdf" ftype="pdf"/>
         <output name="ave" file="@PATH@/ave.pdf" ftype="pdf"/>
+        <output name="design" file="@PATH@/design.pdf" ftype="pdf"/>
         <output name="R_results" file="@PATH@/rgcca.result.RData" compare="sim_size" delta="1000" ftype="rdata"/>
         <output name="variable_table" >
             <assert_contents>
@@ -20,6 +21,21 @@
                         expression='^.+(\s\-?\d+.\d+){4}.+$'/>
             </assert_contents>
         </output>
+    </xml>
+
+    <xml name="output_tests_3blocks">
+        <repeat name="dataset">
+            <param name="block_n" value="industry.tsv"/>
+        </repeat>
+        <repeat name="dataset">
+            <param name="block_n" value="politic.tsv"/>
+        </repeat>
+        <section name="analyse">
+            <param name="tau" value="0.75"/>
+            <param name="scheme" value="4"/>
+        </section>
+        <assert_command has_text="--tau 0.6"/>
+        <assert_command has_text="--scheme 4"/>
     </xml>
 
 </macros>
