@@ -2,16 +2,18 @@ language: python
 dist: xenial
 
 before_install:
-  - sudo apt-get install -y python-virtualenv r-base libxml2-dev libcurl4-openssl-dev libssl-dev liblapack-dev
-  - sudo R -e 'install.packages(c("RGCCA","ggplot2","optparse","scales","igraph", "ggrepel"),  repos = "http://cran.us.r-project.org")'
+  - sudo apt-get install -y python-virtualenv
   - virtualenv planemo-venv
   - . planemo-venv/bin/activate
-  - pip install --upgrade pip setuptools
-  - pip install planemo==0.47.0
+  - pip install planemo==0.58.1
+  - planemo conda_init
+
+install:
+  - planemo conda_install ${TRAVIS_BUILD_DIR}
 
 script:
   - planemo lint ${TRAVIS_BUILD_DIR}
-  - planemo test --conda_auto_init --conda_auto_install --conda_dependency_resolution --conda_debug --no_cache_galaxy --file_path ${TRAVIS_BUILD_DIR} --job_output_files ${TRAVIS_BUILD_DIR} ${TRAVIS_BUILD_DIR}
+  - planemo test --conda_debug --no_cache_galaxy --file_path ${TRAVIS_BUILD_DIR} --job_output_files ${TRAVIS_BUILD_DIR} ${TRAVIS_BUILD_DIR}
 
 after_script:
   - ls ${TRAVIS_BUILD_DIR}
