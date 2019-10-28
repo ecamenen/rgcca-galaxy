@@ -461,6 +461,10 @@ plotVariablesSpace <- function(
     no_Overlap = FALSE) {
 
     y <- NULL
+    
+    # PCA case: remove the superblock in legend
+    if (identical(blocks[[1]], blocks[[2]]))
+        superblock <- FALSE
 
     df <- getVariablesIndexes(
         rgcca = rgcca,
@@ -482,9 +486,6 @@ plotVariablesSpace <- function(
         yy <- center[2] + r * sin(tt)
         return(data.frame(x = xx, y = yy))
     }
-    
-    if (superblock)
-        collapse <- TRUE
 
     p <- plotSpace(
             rgcca,
@@ -734,7 +735,6 @@ plotFingerprint <- function(
         levels(color) <- colorGroup(color)
         p <- ggplot(df, aes(order, df[, 1], fill = df$resp))
     } else {
-
         color <- "black"
         p <- ggplot(df, aes(order, df[, 1], fill = abs(df[, 1])))
     }

@@ -653,7 +653,7 @@ if (opt$type != "pca") {
     # Creates design scheme
     nodes <- getNodes(blocks, rgcca = rgcca.out)
     edges <- getEdges(connection, blocks)
-    conNet <- function()plotNetwork(nodes, edges, blocks)
+    conNet <- function() plotNetwork(nodes, edges, blocks)
     savePlot(opt$o5, conNet)
 }
 

@@ -14,31 +14,17 @@ analysis, correlation, visualisation
 arthur.tenenhaus@l2s.centralesupelec.fr
 
 ##### Short description:
-Performs multi-variate analysis (PCA, CCA, PLS, RGCCA) and projects the variables and samples into a bi-dimensional space.
+Performs multi-variate analysis (PCA, CCA, PLS, R/SGCCA, etc.) and produces textual and graphical outputs (e.g. variables and individuals plots).
 
 ---
 
 ## Description
 
-For the sake of comprehension of the use of the RGCCA package, the theoretical foundations of RGCCA and variations - 
-that were previously published (Tenenhaus and Tenenhaus 2011 ; Tenenhaus and Tenenhaus 2014 ; Tenenhaus, and Frouin 2015 ;
-Tenenhaus, Tenenhaus, and Groenen 2017).
-
-We consider J data matrices *X1, ..., XJ*. Each *n × pj* data matrix *Xj = [ xj1, ..., xjpj ]* is called a block and represents 
-a set of *pj* variables observed on *n* individuals.
-The number and the nature of the variables may differ from one block to another, but the individuals must be the same across blocks.
-We assume that all variables are centered. The objective of RGCCA is to find, for each block, a weighted composite of 
-variables (called block component) *yj = Xj * aj, j=1, ... , J* (where *aj* is a column-vector with  *pj* elements) 
-summarizing the relevant information between and within the blocks.
-The block components are obtained such that (i) block components explain well their own block and/or (ii) 
-block components that are assumed to be connected are highly correlated. 
-In addition, RGCCA integrates a variable selection procedure, called SGCCA, allowing the identification of the most 
-relevant features. Finally, as a component-based method, RGCCA/SGCCA can provide users with graphical 
-representations to visualize the sources of variability within blocks and the amount of correlation between blocks.
+We consider J data matrices X1 ,..., XJ. Each n × pj data matrix Xj = [ xj1, ..., xjpj ] is called a block and represents a set of pj variables observed on n individuals. The number and the nature of the variables may differ from one block to another, but the individuals must be the same across blocks. We assume that all variables are centered. The objective of RGCCA is to find, for each block, a weighted composite of variables (called block component) yj = Xj . aj, j = 1 ,..., J (where aj is a column-vector with pj elements) summarizing the relevant information between and within the blocks. The block components are obtained such that (i) block components explain well their own block and/or (ii) block components that are assumed to be connected are highly correlated. In addition, RGCCA integrates a variable selection procedure, called SGCCA, allowing the identification of the most relevant features (see [here](https://github.com/BrainAndSpineInstitute/rgcca_Rpackage/blob/master/README.md#rsgcca-from-the-cran-vignette-3) for more information).
 
 ## Load the inputs
 
-In localhost:8080, in the tool-shed (left panel), select the analysis menu and the « multiOmics Toolbox » tool (Fig. 1). 
+In the tool-shed (left panel), select the analysis menu and the « multiOmics Toolbox » tool (Fig. 1). 
 This tool is a wrapper for RGCCA analysis (for more information, see  [1], [2] or [3])
 
 Download the pre-formatted files [here](https://github.com/BrainAndSpineInstitute/rgcca_Rpackage/tree/master/data). 

@@ -74,7 +74,8 @@ getVariablesIndexes <- function(
                 row.names(data.frame(df[order(abs(df[, x]), decreasing = TRUE), ])[seq(n_mark), ]))
         ))
         df <- df[selectedVar, ]
-    }
+    } else
+        selectedVar <- row.names(df)
 
     # group by blocks
     if (superblock & (collapse | (i_block == length(rgcca$a)))) {
@@ -84,15 +85,14 @@ getVariablesIndexes <- function(
         else{
             resp <- getBlocsVariables(rgcca$a)
 
-            if (!is.null(selectedVar))
-                resp <- resp[
-                    unlist(
-                        lapply(
-                            seq_len(length(selectedVar)),
-                            function(x) which(colnames(blocks[[length(blocks)]]) == selectedVar[x])
-                        )
+            resp <- resp[
+                unlist(
+                    lapply(
+                        seq_len(length(selectedVar)),
+                        function(x) which(colnames(blocks[[length(blocks)]]) == selectedVar[x])
                     )
-                ]
+                )
+            ]
         }
        # df <- resp[row.names(df)]
 

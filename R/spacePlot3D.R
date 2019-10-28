@@ -7,21 +7,21 @@
 #' @examples
 #' library(RGCCA)
 #' data("Russett")
-# blocks = list(agriculture = Russett[, seq(3)],
-#     politic = Russett[, 6:11] )
-# rgcca.res = rgcca.analyze(blocks, ncomp = rep(3, 2))
-# df = getComponents(rgcca.res, comp_z = 3)
-# spacePlot3D(df, i_block = 2)
-# spacePlot3D(df, i_block = 2, text = FALSE)
-# response = factor( apply(Russett[, 9:11], 1, which.max),
-#                   labels = colnames(Russett)[9:11] )
-# response = blocks[[2]][, 1]
-# names(response) = row.names(blocks[[2]])
-# df = getComponents(rgcca.res, response, comp_z = 3)
-# spacePlot3D(df, i_block = 2, text = FALSE)
-# spacePlot3D(df, i_block = 2)
-# df = getVariablesIndexes(rgcca.res, blocks, comp_z = 3, i_block = 1, collapse = TRUE)
-# spacePlot3D(df, i_block = 2)
+#' blocks = list(agriculture = Russett[, seq(3)],
+#'     politic = Russett[, 6:11] )
+#' rgcca.res = rgcca.analyze(blocks, ncomp = rep(3, 2))
+#' df = getComponents(rgcca.res, comp_z = 3)
+#' spacePlot3D(df, i_block = 2)
+#' spacePlot3D(df, i_block = 2, text = FALSE)
+#' response = factor( apply(Russett[, 9:11], 1, which.max),
+#'                   labels = colnames(Russett)[9:11] )
+#' response = blocks[[2]][, 1]
+#' names(response) = row.names(blocks[[2]])
+#' df = getComponents(rgcca.res, response, comp_z = 3)
+#' spacePlot3D(df, i_block = 2, text = FALSE)
+#' spacePlot3D(df, i_block = 2)
+#' df = getVariablesIndexes(rgcca.res, blocks, comp_z = 3, i_block = 1, collapse = TRUE)
+#' spacePlot3D(df, i_block = 2, type = "var")
 #' @export
 spacePlot3D <- function(
     df,
@@ -32,7 +32,8 @@ spacePlot3D <- function(
     i_block_y = i_block,
     i_block_z = i_block,
     text = TRUE,
-    title = "Sample plot") {
+    title = "Sample plot",
+    type = "ind") {
     
     if (length(unique(df$resp)) == 1) {
         df$resp = as.factor(rep("a", length(df$resp)))
@@ -144,7 +145,7 @@ spacePlot3D <- function(
             p <- p %>% add_trace_manual(i)
     }
 
-    p %>%
+    p <- p %>%
         layout(
             autosize = T,
             margin = list(
@@ -168,4 +169,23 @@ spacePlot3D <- function(
             )
         )
 
+    plot_circle <- function(p, x, y, z){
+        df <- cbind(circleFun(), 0)
+        add_trace(
+            p = p,
+            x = df[, x],
+            y = df[, y],
+            z = df[, z],
+            showlegend = FALSE,
+            hoverinfo = "none" ,
+            mode = "lines",
+            type = "scatter3d",
+            line = list(color = "grey", width = 4)
+        )
+    }
+        
+    if (type == "var")
+        p <- p %>% plot_circle(1, 2, 3) %>% plot_circle(1, 3, 2) # %>% plot_circle(3, 2, 1)
+    
+    return(p)
 }
