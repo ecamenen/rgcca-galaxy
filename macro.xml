@@ -34,7 +34,7 @@
             <param name="tau" value="0.75"/>
             <param name="scheme" value="4"/>
         </section>
-        <assert_command has_text="--tau 0.6"/>
+        <assert_command has_text="--tau 0.75"/>
         <assert_command has_text="--scheme 4"/>
     </xml>
 
