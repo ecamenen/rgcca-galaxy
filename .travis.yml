@@ -18,5 +18,3 @@ script:
 after_script:
   - ls ${TRAVIS_BUILD_DIR}
   - cat tool_test_output.json
-  - head ${TRAVIS_BUILD_DIR}/individuals.tsv ${TRAVIS_BUILD_DIR}/variables.tsv
-  - wc ${TRAVIS_BUILD_DIR}/individuals.tsv ${TRAVIS_BUILD_DIR}/variables.tsv

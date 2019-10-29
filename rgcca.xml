@@ -35,7 +35,11 @@
             --separator $parse.separator
             $analyse.superblock
             $analyse.scale
-            --tau $analyse.tau
+            #if $analyse.tau.bool == "false"
+            --tau $analyse.tau.value
+            #else
+            --tau $analyse.tau.bool
+            #end if
             --ncomp $analyse.ncomp
             --scheme $analyse.scheme
             #if $analyse.method.family == "1"
@@ -151,8 +155,14 @@
                 <when value="false"/>
             </conditional>
 
-            <param name="tau" type="float" label="Tau parameter in RGCCA" value="1" min="0" max="1"
-                   help="A regularization parameter for each block (i.e., tau) [default: 1]. Tau varies from 0 (maximizing the correlation) to 1 (maximizing the covariance). If a SGCCA method is selected, tau is automatically set to 1. A shrinkage parameter can be defined instead for automatic variable selection, varying from the square root of the variable number (the fewest selected variables) to 1 (all the variables are included)."/>
+            <conditional name="tau">
+                <param name="bool" type="boolean" truevalue="optimal" falsevalue="false" checked="true" label="Use an optimal tau"
+                       help="A regularization parameter for each block (i.e., tau) [default: 1]. Tau varies from 0 (maximizing the correlation) to 1 (maximizing the covariance). If a SGCCA method is selected, tau is automatically set to 1. A shrinkage parameter can be defined instead for automatic variable selection, varying from the square root of the variable number (the fewest selected variables) to 1 (all the variables are included)."/>
+                <when value="false">
+                    <param name="value" type="float" label=" " value="1" min="0" max="1"/>
+                </when>
+                <when value="optimal"/>
+            </conditional>
 
             <param name="scheme" type="select" label="Scheme function" help="Link (i.e. scheme) function for covariance maximization is calculated with: the identity function (horst scheme),
 the absolute values (centroid scheme), the squared values (factorial scheme). Only, the horst scheme penalizes structural
@@ -220,7 +230,9 @@ negative correlation. The factorial scheme discriminates more strongly the block
                 </conditional>
                 <param name="superblock" value="false"/>
             </section>
-            <assert_command has_text="-c "/>
+            <assert_command>
+                <has_text text="-c "/>
+            </assert_command>
         </test>
 
         <test expect_num_outputs="8" expect_exit_code="0">
@@ -233,7 +245,9 @@ negative correlation. The factorial scheme discriminates more strongly the block
                     <param name="block_response" value="3"/>
                 </conditional>
             </section>
-            <assert_command has_text="--response 3"/>
+            <assert_command>
+                <has_text text="--response 3"/>
+            </assert_command>
         </test>
 
         <test expect_num_outputs="8" expect_exit_code="0">
@@ -250,7 +264,9 @@ negative correlation. The factorial scheme discriminates more strongly the block
                     <param name="type" value="sgcca"/>
                 </conditional>
             </section>
-            <assert_command has_text="sgcca"/>
+            <assert_command>
+                <has_text text="sgcca"/>
+            </assert_command>
         </test>
 
         <test expect_num_outputs="8" expect_exit_code="0">
@@ -260,7 +276,10 @@ negative correlation. The factorial scheme discriminates more strongly the block
             </repeat>
             <section name="analyse">
                 <param name="scale" value="false"/>
-                <param name="tau" value="0"/>
+                <conditional name="tau">
+                    <param name="bool" value="false"/>
+                    <param name="value" value="0"/>
+                </conditional>
                 <param name="scheme" value="3"/>
                 <param name="ncomp" value="3"/>
                 <conditional name="method">
@@ -276,7 +295,9 @@ negative correlation. The factorial scheme discriminates more strongly the block
                 <param name="blocky" value="1"/>
                 <param name="nmark" value="11"/>
             </section>
-            <assert_command has_text="pls"/>
+            <assert_command>
+                <has_text text="pls"/>
+            </assert_command>
         </test>
 
     </tests>
@@ -315,7 +336,7 @@ A user-friendly multi-blocks analysis (Regularized Generalized Canonical Correla
 
 - RGCCA: https://cran.r-project.org/web/packages/RGCCA/vignettes/vignette_RGCCA.pdf
 - accepted input / output formats: https://github.com/BrainAndSpineInstitute/rgcca_Rpackage#input-files
-- tutorial:
+- tutorial: https://github.com/BrainAndSpineInstitute/rgcca_galaxy/blob/master/README.md
 
 </help>
 

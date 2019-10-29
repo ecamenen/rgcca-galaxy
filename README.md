@@ -28,7 +28,7 @@ We consider J data matrices X1 ,..., XJ. Each n × pj data matrix Xj = [ xj1, ..
 
 In the tool-shed (left panel), select the « RGCCA » tool (Fig. 1). 
 
-Download the pre-formatted files [here](https://githubcom/BrainAndSpineInstitute/rgcca_Rpackage/tree/master/data). This folder includes three blocks with the same individuals (corresponding to the countries here) but different types of variables (agriculture, industry and politic). In this dataset, according to Russett (1964), a high agriculture inequality and a low industrial development lead to unstable political regime. 
+Download the pre-formatted files [here](https://github.com/BrainAndSpineInstitute/rgcca_Rpackage/tree/master/inst/extdata). This folder includes three blocks with the same individuals (corresponding to the countries here) but different types of variables (agriculture, industry and politic). In this dataset, according to Russett (1964), a high agriculture inequality and a low industrial development lead to unstable political regime. 
 
 Download them in Galaxy (with the download button in green, **Fig. 1**). The accepted format is one (for PCA) or multiple CSV files containing a matrix with:
 - quantitative values only, with decimals separated by '.' and missing values labelled as "NA"
@@ -70,7 +70,7 @@ Change the separator to another one (e.g.,```semicolon```) to observe an error n
 ## 3. Custom the analysis
 
 
-The analyse parameters are all set by default (**Fig. 5**) and the user could directly click on the ```Execute``` button. To directly visualize the outputs, see the [last section](https://github.com/BrainAndSpineInstitute/rgcca_Rpackage/blob/master/inst/shiny/tutorialShiny.md#4-visualize-the-plot-tabs).
+The analyse parameters are all set by default (**Fig. 5**) and the user could directly click on the ```Execute``` button. To directly visualize the outputs, see the [last section](https://github.com/BrainAndSpineInstitute/rgcca_galaxy/tree/master#5-visualize-the-plot).
 
 ![Fig 5](img/advAn.png) 
 
@@ -149,7 +149,7 @@ If activated (by default), the ```display names``` option shows the name of the 
 The ```component``` of the analysis allows to choose the space where the points are visualised. For the "top variable" histogram, the component is set by ```component for the x-axis```. For biplots tabs, either ```component for the x-axis``` or ```component for the y-axis``` could be set. By default, they are respectively set to the first and the second components. Their choices are limited by the number of components selected in the analysis (defined in the 2.2. section). If the number of components in RGCCA were greater than two (not allowed in the Russet example, because of the industry block), the ```component for the x-axis```, for example, could be set to the third one.
 
 ### 4.4. Block (for the x/y-axis)
-By default, plots are shown with the ```superblock``` (i.e., the concatenation of all blocs; see [section 3.3.2](https://github.com/BrainAndSpineInstitute/rgcca_Rpackage/blob/master/inst/shiny/tutorialShiny.md#32-block-for-the-xy-axis)) to visualize all the blocs together. If this option is disabled, by default, the last blocks in the drop-down menu ```block``` is used (option ```0```). Choose another block (e.g., ```1``` for agriculture) to update the plots with your selection. For the ```individual``` plot, a ```block for the y-axis``` could also be selected.
+By default, plots are shown with the ```superblock``` (i.e., the concatenation of all blocs; see [section 3.3.2](https://github.com/BrainAndSpineInstitute/rgcca_galaxy/tree/master#332-superblock)) to visualize all the blocs together. If this option is disabled, by default, the last blocks in the drop-down menu ```block``` is used (option ```0```). Choose another block (e.g., ```1``` for agriculture) to update the plots with your selection. For the ```individual``` plot, a ```block for the y-axis``` could also be selected.
 
 ### 4.5. Number of top variables
 Used only in the  the "top variable" histogram, the maximum ```number of top variables``` is *a posteriori* automatically set to the number of variables in the selected blocks. For example, with Russet data, eleven "top" variables could be visualised by default on the superblock.
@@ -170,10 +170,10 @@ By executing the analysis (blue button at the bottom), four images, two tabular 
 
 
 ### 5.1. Connection between blocks
-```design.pdf``` summarizes the connection between each block: a link corresponds to a "1" value, in the matrix connection file (**Fig. 9**; see [section 3.3.1.](https://github.com/BrainAndSpineInstitute/rgcca_Rpackage/blob/master/inst/shiny/tutorialShiny.md#231-loading-a-connection-file)). For each block:
+```design.pdf``` summarizes the connection between each block: a link corresponds to a "1" value, in the matrix connection file (**Fig. 9**; see [section 3.3.1.](https://github.com/BrainAndSpineInstitute/rgcca_galaxy/tree/master#331-loading-a-connection-file)). For each block:
 - "P" is the number of variables
 - "N" is the number of lines (here, each block has the same number of line)
-- "tau" is the shrinkage parameter and "sparsity" is the sparsity coefficient (see the [3.4.1 & 3.4.2 sections](https://github.com/BrainAndSpineInstitute/rgcca_Rpackage/blob/master/inst/shiny/tutorialShiny.md#24-other-rsgcca-parameters)). The tau parameter could be shown for each component if the optimal option is selected
+- "tau" is the shrinkage parameter and "sparsity" is the sparsity coefficient (see the [3.4.1 & 3.4.2 sections](https://github.com/BrainAndSpineInstitute/rgcca_galaxy/tree/master#34-other-rsgcca-parameters). The tau parameter could be shown for each component if the optimal option is selected
 
 ![Fig 9](https://raw.githubusercontent.com/BrainAndSpineInstitute/rgcca_Rpackage/master/img/design.png)
 

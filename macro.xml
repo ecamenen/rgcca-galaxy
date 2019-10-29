@@ -31,11 +31,16 @@
             <param name="block_n" value="politic.tsv"/>
         </repeat>
         <section name="analyse">
-            <param name="tau" value="0.75"/>
+            <conditional name="tau">
+                <param name="bool" value="false"/>
+                <param name="value" value="0.75"/>
+            </conditional>
             <param name="scheme" value="4"/>
         </section>
-        <assert_command has_text="--tau 0.75"/>
-        <assert_command has_text="--scheme 4"/>
+        <assert_command>
+            <has_text text="--tau 0.75"/>
+            <has_text text="--scheme 4"/>
+        </assert_command>
     </xml>
 
 </macros>
