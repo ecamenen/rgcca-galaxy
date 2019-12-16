@@ -8,19 +8,6 @@
 # and produces textual and graphical outputs (e.g. variables and individuals
 # plots).
 
-#' @import RGCCA
-#' @import ggplot2
-#' @importFrom grDevices dev.off rgb colorRamp pdf colorRampPalette
-#' @importFrom graphics plot
-#' @importFrom stats cor quantile runif sd na.omit p.adjust pnorm qnorm weights
-#' @importFrom utils read.table write.table packageVersion installed.packages head
-#' @importFrom scales hue_pal
-#' @importFrom optparse OptionParser make_option parse_args
-#' @importFrom plotly layout ggplotly style plotly_build %>% plot_ly add_trace
-#' @importFrom visNetwork visNetwork visNodes visEdges
-#' @importFrom igraph graph_from_data_frame V<- E<-
-#' @importFrom methods is
-
 rm(list = ls())
 graphics.off()
 
@@ -107,7 +94,7 @@ getArgs <- function() {
             metavar = "integer list",
             default = opt[4],
             help = "Number of components in the analysis for each block
-            [default: %default]. The number should be greater than 1 and lower
+            [default: %default]. The number should be higher than 1 and lower
             than the minimum number of variables among the blocks. It can be a
             single values or a comma-separated list (e.g 2,2,3,2)."
         ),
@@ -185,7 +172,7 @@ getArgs <- function() {
             default = opt[9],
             help = "Component used in the X-axis for biplots and the only
             component used for histograms [default: %default] (should not be
-            greater than the number of components of the analysis)"
+            higher than the number of components of the analysis)"
         ),
         make_option(
             opt_str = "--compy",
@@ -193,7 +180,7 @@ getArgs <- function() {
             metavar = "integer",
             default = opt[10],
             help = "Component used in the Y-axis for biplots
-            [default: %default] (should not be greater than the number of
+            [default: %default] (should not be higher than the number of
             components of the analysis)"
         ),
         make_option(
@@ -265,26 +252,22 @@ getArgs <- function() {
     return(OptionParser(option_list = option_list))
 }
 
-checkFile <- function(f) {
-    # Check the existence of a path f: A character giving the path of a file
-    
-    if (!file.exists(f)) {
-        stop(paste0(f, " file does not exist."), exit_code = 120)
-    }
+char_to_list <- function(x){
+    strsplit(gsub(" ", "", as.character(x)), ",")[[1]]
 }
 
-checkArg <- function(opt) {
-        # Check the validity of the arguments opt : an optionParser object
-        
-        if (is.null(opt$datasets))
-            stop(paste0("--datasets is required."), exit_code = 121)
+check_arg <- function(opt) {
+    # Check the validity of the arguments opt : an optionParser object
+
+    if (is.null(opt$datasets))
+        stop(paste0("datasets is required."), exit_code = 121)
     
     if (is.null(opt$scheme))
         opt$scheme <- "factorial"
-    else if (!opt$scheme %in% seq_len(4)) {
+    else if (!opt$scheme %in% seq(4)) {
         stop(
             paste0(
-                "--scheme must be comprise between 1 and 4 [by default: 2], not be equal to ",
+                "scheme should be comprise between 1 and 4 [by default: 2], not be equal to ",
                 opt$scheme,
                 "."
             ),
@@ -297,11 +280,11 @@ checkArg <- function(opt) {
         else
             opt$scheme <- schemes[opt$scheme]
     }
-    
-    if (!opt$separator %in% seq_len(3)) {
+
+    if (!opt$separator %in% seq(3)) {
         stop(
             paste0(
-                "--separator must be comprise between 1 and 3 (1: Tabulation, 2: Semicolon, 3: Comma) [by default: 2], not be equal to ",
+                "separator should be comprise between 1 and 3 (1: Tabulation, 2: Semicolon, 3: Comma) [by default: 2], not be equal to ",
                 opt$separator,
                 "."
             ),
@@ -311,7 +294,7 @@ checkArg <- function(opt) {
         separators <- c("\t", ";", ",")
         opt$separator <- separators[opt$separator]
     }
-    
+
     # if (! opt$init %in% 1:2 )
     # stop(paste0('--init must be 1 or 2 (1: Singular Value
     # Decompostion , 2: random) [by default: 1], not ', opt$init, '.'),
@@ -320,172 +303,78 @@ checkArg <- function(opt) {
     # opt$init <- ifelse(opt$init == 1, 'svd', 'random')
     
     
-    FILES <- c("connection", "group")
-    for (o in FILES)
-        if (!is.null(opt[[o]]))
-            checkFile(opt[[o]])
+    # files <- c("connection", "group")
+    # for (o in files)
+    #     if (!is.null(opt[[o]]))
+    #         check_file(opt[[o]])
+
+    check_integer("nmark", opt$nmark, min = 2)
     
-    checkInteger("nmark")
-    if (opt$nmark < 2)
-        stop(paste0("--nmark must be upper than 2, not be equal to ",
-            opt$nmark,
-            "."),
-            exit_code = 135)
-    
+    for (x in c("ncomp", "tau"))
+        opt[[x]] <- char_to_list(opt[[x]])
+
     return(opt)
 }
 
-checkArgSize <- function(blocks, x, y) {
-    if (length(x) != length(blocks))
-        stop(
-            paste0(
-                "--",
-                y,
-                " list must have the same size (",
-                length(x),
-                ") than the number of blocks (",
-                length(blocks),
-                ")."
-            ),
-            exit_code = 130
-        )
-    else
-        return(TRUE)
-}
-
-postCheckArg <- function(opt, blocks) {
-    # Check the validity of the arguments after loading the blocks opt : an
-    # optionParser object blocks : a list of matrix
-    
-    if (!is.null(opt$names))
-        checkArgSize(
-            blocks,
-            strsplit(gsub(" ", "", opt$names), ",")[[1]], "names"
-        )
-    
-    opt <- select_type(blocks, opt)
-    
-    if (opt$superblock | opt$type == "pca")
-        blocks <- c(blocks, list(Reduce(cbind, blocks)))
-    
-    for (x in c("block", "block_y", "response")) {
+post_check_arg <- function(opt, rgcca) {
+# Check the validity of the arguments after loading the blocks opt : an
+# optionParser object blocks : a list of matrix
+ 
+    for (x in c("block", "block_y")) {
         if (!is.null(opt[[x]])) {
-            if (opt[[x]] > length(blocks))
-                stop(
-                    paste0(
-                        "--",
-                        x,
-                        " must be lower than ",
-                        length(blocks),
-                        " (the maximum number of blocks), not be equal to ",
-                        opt[[x]],
-                        "."
-                    ),
-                    exit_code = 133
-                )
-            else if (opt[[x]] == 0)
-                opt[[x]] <- length(blocks)
-            else if (opt[[x]] < 0)
-                stop(paste0("--",
-                    x,
-                    " must be positive, not be equal to ",
-                    opt[[x]],
-                    "."),
-                    exit_code = 134)
-            checkInteger(x)
+            if (opt[[x]] == 0)
+                opt[[x]] <- length(rgcca$blocks)
+            opt[[x]] <- check_blockx(x, opt[[x]], rgcca$blocks)
         }
     }
-    
-    out <- lapply(seq_len(length(opt$ncomp)), function(x) {
-        checkInteger("ncomp", opt$ncomp[x])
-        if ((opt$ncomp[x] < 2) ||
-                (opt$ncomp[x] > ncol(blocks[[x]]))) {
-            stop(
-                paste0(
-                    "--ncomp must be comprise between 2 and ",
-                    ncol(blocks[[x]]),
-                    ", the number of variables of the block (currently equals to ",
-                    opt$ncomp[x],
-                    ")."
-                ),
-                exit_code = 126
-            )
-        }
-    })
-    
-    checkArgSize(blocks, opt$ncomp, "ncomp")
-    
-    out <- sapply(c("compx", "compy"), function(x) {
-        if ((opt[[x]] < 1) || (opt[[x]] > opt$ncomp[opt$block])) {
-            stop(
-                paste0(
-                    "--",
-                    x,
-                    " is currently equals to ",
-                    opt[[x]],
-                    " and must be comprise between 1 and ",
-                    opt$ncomp[opt$block],
-                    " (the number of component for the selected block)."
-                ),
-                exit_code = 128
-            )
-        }
-    })
-    
-    MSG <- "--tau must be comprise between 0 and 1 or must correspond to the character 'optimal' for automatic setting"
-    if (all(opt$tau != "optimal")) {
-        tryCatch({
-            list_tau <- as.list(opt$tau)
-            # Check value of each tau
-            out <- lapply(list_tau, function(x) {
-                if (((x < 0) || (x > 1)) && x != "optimal")
-                    stop(paste0(MSG, " (currently equals to ", x, ")."),
-                        exit_code = 129)
-            })
-            
-            # If there is only one common tau
-            if (length(list_tau) == 1)
-                opt$tau <- rep(list_tau[[1]], length(blocks))
-            else if (checkArgSize(blocks, list_tau, "tau"))
-                opt$tau <- unlist(list_tau)
-        }, warning = function(w) {
-            stop(MSG, exit_code = 131)
-        })
-    } else {
-        opt$tau <- "optimal"
-    }
-    
-    checkC1(blocks, opt$tau, opt$type)
-    
+
+    for (x in c("compx", "compy"))
+        opt[[x]] <- check_compx(x, opt[[x]], rgcca$ncomp, opt$block)
+
     return(opt)
 }
 
-checkInteger <- function(x, y = NULL) {
-    # Test either x is an integer x : a string corresponding to a name
-    # in a list opt'
-    
+check_integer <- function(x, y = x, type = "scalar", float = FALSE, min = 1) {
+
     if (is.null(y))
-        y <- opt[[x]]
+        y <- x
     
-    # Test if not a character
-    tryCatch({
-        as.integer(y)
-        if (is.na(y)) {
-            y <- opt[[x]]
-            warning("")
-        }
-    }, warning = function(w) {
-        stop(paste0("--", x, " is a character (", y, ") and must be an integer."),
-            exit_code = 136)
-    })
+    if (type %in% c("matrix", "data.frame"))
+        y_temp <- y
+
+    y <- suppressWarnings(as.double(as.matrix(y)))
+
+    if (any(is.na(y)))
+        stop(paste(x, "should not be NA."))
+
+    if (!is(y, "numeric"))
+        stop(paste(x, "should be numeric."))
     
-    # Test if not a float
+    if (type == "scalar" && length(y) != 1)
+        stop(paste(x, "should be of length 1."))
+
+    if (!float)
+        y <- as.integer(y)
     
-    if (length(strsplit(as.character(y), ".", fixed = TRUE)[[1]]) > 1)
-        stop(paste0("--", x, " is a float (", y, ") and must be an integer."))
+    if (all(y < min))
+        stop(paste0(x, " should be higher than or equal to ", min, "."))
+
+    if (type %in% c("matrix", "data.frame"))
+        y <- matrix(
+            y, 
+            dim(y_temp)[1], 
+            dim(y_temp)[2],
+            dimnames = dimnames(y_temp)
+        )
+
+    if (type == "data.frame")
+        as.data.frame(y)
+
+    return(y)
 }
 
-loadLibraries <- function(librairies) {
+
+load_libraries <- function(librairies) {
     for (l in librairies) {
         if (!(l %in% installed.packages()[, "Package"]))
             utils::install.packages(l, repos = "http://cran.us.r-project.org")
@@ -521,32 +410,29 @@ opt <- list(
     o5 = "design.pdf",
     o6 = "individuals.tsv",
     o7 = "variables.tsv",
-    o8 = "rgcca.result.RData",
+    o8 = "rgcca_result.RData",
     datasets = paste0("inst/extdata/",
-        c("agriculture","industry","politic"),
+        c("agriculture","industry", "politic"),
         ".tsv",
         collapse = ",")
 )
 
+load_libraries(c("RGCCA", "ggplot2", "optparse", "scales", "igraph", "ggrepel"))
 
-loadLibraries(c("RGCCA", "ggplot2", "optparse", "scales", "igraph", "ggrepel"))
-
-tryCatch({
-    opt <- checkArg(parse_args(getArgs()))
-}, error = function(e) {
-    if (length(grep("nextArg", e[[1]])) != 1)
-        stop(e[[1]], exit_code = 140)
-}, warning = function(w) {
-    stop(w[[1]], exit_code = 141)
-})
+tryCatch(
+    opt <- check_arg(parse_args(getArgs())),
+    error = function(e) {
+        if (length(grep("nextArg", e[[1]])) != 1)
+            stop(e[[1]], exit_code = 140)
+    }, warning = function(w)
+        stop(w[[1]], exit_code = 141)
+)
 
 # Load functions
 setwd(opt$directory)
 
-for (f in list.files("R/")) {
-    if ( f != "launcher.R")
+for (f in list.files("R/"))
         source(paste0("R/", f))
-}
 
 # Set missing parameters by default
 opt$header <- !("header" %in% names(opt))
@@ -555,108 +441,75 @@ opt$superblock <- !("superblock" %in% names(opt))
 opt$scale <- !("scale" %in% names(opt))
 opt$text <- !("text" %in% names(opt))
 
-blocks <- setBlocks(opt$datasets, opt$names, opt$separator)
-blocks <- scaling(blocks, opt$scale)
+blocks <- load_blocks(opt$datasets, opt$names, opt$separator)
+group <- load_response(blocks, opt$group, opt$separator, opt$header)
+connection <- load_connection(file = opt$connection, sep = opt$separator)
 
-# If single values for ncomp and tau, tansform it in a list
-for (x in c("ncomp", "tau")) {
-    if (length(grep(",", opt[[x]])) == 0 &&
-            !(x == "tau" && opt[[x]] == "optimal"))
-        opt[[x]] <- paste(rep(opt[[x]], length(blocks)), collapse = ",")
-}
+rgcca_out <- rgcca.analyze(
+    blocks = blocks,
+    connection = connection,
+    response = opt$response,
+    superblock = opt$superblock,
+    tau = opt$tau,
+    ncomp = opt$ncomp,
+    scheme = opt$scheme,
+    scale = opt$scale,
+    type = opt$type
+)
 
-opt <- checkSuperblock(opt)
-opt <- postCheckArg(opt, blocks)
-
-if (!is.null(opt$response)) {
-    opt <- setPosPar(opt, blocks, opt$response)
-    blocks <- opt$blocks
-}
-
-blocks <- setSuperblock(blocks, opt$superblock, opt$type)
-
-connection <- opt$connection
-if (!is.matrix(connection))
-    connection <- setConnection(blocks,
-        (opt$superblock | !is.null(opt$response)),
-        opt$connection,
-        opt$separator)
-
-group <- setResponse(blocks, opt$group, opt$separator, opt$header)
-
-rgcca.out <- rgcca.analyze(
-        blocks = blocks,
-        connection = connection,
-        tau = opt$tau,
-        ncomp = opt$ncomp,
-        scheme = opt$scheme,
-        scale = FALSE,
-        type = opt$type
-    )
+opt <- post_check_arg(opt, rgcca_out)
 
 ########## Plot ##########
 
-# Samples common space
-if (opt$ncomp[opt$block] == 1 && is.null(opt$block_y)) {
-    warning("With a number of component of 1, a second block should be chosen
-    to perform a samples plot")
+if (rgcca_out$ncomp[opt$block] == 1 && is.null(opt$block_y)) {
+    warning("With a number of component of 1, a second block should be chosen to perform an individual plot")
 } else {
     (
-        individual_plot <- plotSamplesSpace(
-                rgcca.out,
-                group,
-                opt$compx,
-                opt$compy,
-                opt$block,
-                opt$text,
-                opt$block_y,
-                getFileName(opt$group)
-            )
+        individual_plot <- plot_ind(
+            rgcca_out,
+            group,
+            opt$compx,
+            opt$compy,
+            opt$block,
+            opt$text,
+            opt$block_y,
+            get_filename(opt$group)
+        )
     )
-    savePlot(opt$o1, individual_plot)
+    save_plot(opt$o1, individual_plot)
 }
 
-if (opt$ncomp[opt$block] > 1) {
-    # Variables common space
+if (rgcca_out$ncomp[opt$block] > 1) {
     (
-        corcircle <- plotVariablesSpace(
-                rgcca.out,
-                blocks,
-                opt$compx,
-                opt$compy,
-                opt$superblock,
-                opt$block,
-                opt$text,
-                n_mark = opt$nmark
-            )
+        corcircle <- plot_var_2D(
+            rgcca_out,
+            opt$compx,
+            opt$compy,
+            opt$block,
+            opt$text,
+            n_mark = opt$nmark
+        )
     )
-    savePlot(opt$o2, corcircle)
+    save_plot(opt$o2, corcircle)
 }
 
-# Fingerprint plot
-top_variables <- plotFingerprint(
-        rgcca.out, 
-        blocks, 
-        opt$compx, 
-        opt$superblock, 
+top_variables <- plot_var_1D(
+        rgcca_out,
+        opt$compx,
         opt$nmark,
+        opt$block,
         type = "cor"
     )
-savePlot(opt$o3, top_variables)
+save_plot(opt$o3, top_variables)
 
+# Average Variance Explained
+(ave <- plot_ave(rgcca_out))
+save_plot(opt$o4, ave)
 
-if (opt$type != "pca") {
-    # Average Variance Explained
-    (ave <- plotAVE(rgcca.out))
-    savePlot(opt$o4, ave)
+# Creates design scheme
+design <- function() plot_network(rgcca_out)
+save_plot(opt$o5, design)
 
-    # Creates design scheme
-    nodes <- getNodes(blocks, rgcca = rgcca.out)
-    edges <- getEdges(connection, blocks)
-    conNet <- function() plotNetwork(nodes, edges, blocks)
-    savePlot(opt$o5, conNet)
-}
-
-saveInds(rgcca.out, blocks, 1, 2, opt$o6)
-saveVars(rgcca.out, blocks, 1, 2, opt$o7)
-save(rgcca.out, file = opt$o8)
+save_ind(rgcca_out, 1, 2, opt$o6)
+save_var(rgcca_out, 1, 2, opt$o7)
+save(rgcca_out, file = opt$o8)

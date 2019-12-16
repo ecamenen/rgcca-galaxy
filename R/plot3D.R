@@ -1,40 +1,45 @@
 #' Plot in 3 dimensions
 #' 
 #' Plot in 3 dimensions either to visualize the components of an analyse or the variables
-#' @inheritParams plotSamplesSpace
-#' @inheritParams plotSpace
-#' @inheritParams getComponents
+#' @inheritParams plot_ind
+#' @inheritParams plot2D
+#' @inheritParams get_comp
+#' @param type A character for the type of plot : either "ind" for individual plot or "var" for corcircle
 #' @examples
 #' library(RGCCA)
 #' data("Russett")
 #' blocks = list(agriculture = Russett[, seq(3)],
 #'     politic = Russett[, 6:11] )
-#' rgcca.res = rgcca.analyze(blocks, ncomp = rep(3, 2))
-#' df = getComponents(rgcca.res, comp_z = 3)
-#' spacePlot3D(df, i_block = 2)
-#' spacePlot3D(df, i_block = 2, text = FALSE)
+#' rgcca_out = rgcca.analyze(blocks, ncomp = rep(3, 2))
+#' df = get_comp(rgcca_out, compz = 3)
+#' plot3D(df, rgcca_out, i_block = 2)
+#' plot3D(df, rgcca_out, i_block = 2, text = FALSE)
 #' response = factor( apply(Russett[, 9:11], 1, which.max),
 #'                   labels = colnames(Russett)[9:11] )
 #' response = blocks[[2]][, 1]
 #' names(response) = row.names(blocks[[2]])
-#' df = getComponents(rgcca.res, response, comp_z = 3)
-#' spacePlot3D(df, i_block = 2, text = FALSE)
-#' spacePlot3D(df, i_block = 2)
-#' df = getVariablesIndexes(rgcca.res, blocks, comp_z = 3, i_block = 1, collapse = TRUE)
-#' spacePlot3D(df, i_block = 2, type = "var")
+#' df = get_comp(rgcca_out, response, compz = 3)
+#' plot3D(df, rgcca_out, i_block = 2, text = FALSE)
+#' plot3D(df, rgcca_out, i_block = 2)
+#' df = get_ctr2(rgcca_out, compz = 3, i_block = 1, collapse = TRUE)
+#' plot3D(df, rgcca_out, i_block = 2, type = "var")
 #' @export
-spacePlot3D <- function(
+plot3D <- function(
     df,
-    comp_x = 1,
-    comp_y = 2,
-    comp_z = 3,
-    i_block,
+    rgcca,
+    compx = 1,
+    compy = 2,
+    compz = 3,
+    i_block = 1,
     i_block_y = i_block,
     i_block_z = i_block,
     text = TRUE,
     title = "Sample plot",
-    type = "ind") {
-    
+    type = "ind",
+    cex = 1,
+    cex_point = 3 * cex,
+    cex_lab = 19 * cex) {
+
     if (length(unique(df$resp)) == 1) {
         df$resp = as.factor(rep("a", length(df$resp)))
         midcol = "#cd5b45"
@@ -43,21 +48,24 @@ spacePlot3D <- function(
 
     axis <- function(x, i)
         list(
-                title = paste0("<i>", printAxis(rgcca.res, x, i), "</i>"),
+                title = paste0("<i>", print_comp(rgcca, x, i), "</i>"),
                 titlefont = list(
-                        size = AXIS_TITLE_CEX * 0.75
+                        size = cex_lab * 0.75
                     )
             )
-    
-    colorNumeric <- function(x){
+
+    color <- function(x){
         n <- length(x)
-         cut(
-             x, 
-             breaks = n,
-             labels = colorRampPalette(c("#A50026", midcol,  "#313695"))(n), 
-             include.lowest = TRUE)
+        if (!is.character2(df$resp))
+            cut(
+                x,
+                breaks = n,
+                labels = colorRampPalette(c("#A50026", midcol,  "#313695"))(n),
+                include.lowest = TRUE)
+        else
+            color_group(seq(length(unique(df$resp))))
     }
-    
+
     subdf <- function(x) 
         df[which(df$resp == levels(df$resp)[x]), ]
 
@@ -76,29 +84,29 @@ spacePlot3D <- function(
                 showlegend = TRUE
             )
         )
-        
-        color <- colorGroup(1:length(l))[x]
-        
+
+        color <- color_group(seq(length(l)))[x]
+
         if (text) {
             func$mode <- "text"
             func$text <- ~row.names(subdf(x))
             func$textfont <- list(
                 color = color,
-                size = PCH_TEXT_CEX * 4
+                size = cex_point * 4
             )
         }else{
             func$mode <- "markers"
             func$marker <- list(
                 color = color,
-                size = PCH_TEXT_CEX * 1.5
+                size = cex_point * 1.5
             )
         }
-        
+
         eval(func)
     }
-    
-    
-    if (!isCharacter(df$resp)) {
+
+
+    if (!is.character2(df$resp)) {
 
         if (text)
             visible <- "legendonly"
@@ -130,8 +138,8 @@ spacePlot3D <- function(
                     type = "scatter3d",
                     text = ~ row.names(df),
                     textfont = list(
-                        color = colorNumeric(df$resp),
-                        size = PCH_TEXT_CEX * 4
+                        color = color(df$resp),
+                        size = cex_point * 4
                     ),
                     showlegend = FALSE,
                     visible = TRUE
@@ -147,7 +155,7 @@ spacePlot3D <- function(
 
     p <- p %>%
         layout(
-            autosize = T,
+            autosize = TRUE,
             margin = list(
                 l = 50,
                 r = 50,
@@ -156,21 +164,21 @@ spacePlot3D <- function(
             ),
             scene = list(
                 aspectmode = 'cube',
-                xaxis = axis(comp_x, i_block),
-                yaxis = axis(comp_y, i_block_y),
-                zaxis = axis(comp_z, i_block_z)
+                xaxis = axis(compx, i_block),
+                yaxis = axis(compy, i_block_y),
+                zaxis = axis(compz, i_block_z)
             ),
             title = list(
                 text = paste0('<b>', title, '</b>'),
                 font = list(
-                    size = 25 * CEX,
+                    size = 25 * cex,
                     face = "bold"
                 )
             )
         )
 
-    plot_circle <- function(p, x, y, z){
-        df <- cbind(circleFun(), 0)
+    plot_circle3D <- function(p, x, y, z){
+        df <- cbind(plot_circle(), 0)
         add_trace(
             p = p,
             x = df[, x],
@@ -183,9 +191,9 @@ spacePlot3D <- function(
             line = list(color = "grey", width = 4)
         )
     }
-        
+
     if (type == "var")
-        p <- p %>% plot_circle(1, 2, 3) %>% plot_circle(1, 3, 2) # %>% plot_circle(3, 2, 1)
-    
+        p <- p %>% plot_circle3D(1, 2, 3) %>% plot_circle3D(1, 3, 2) # %>% plot_circle3D(3, 2, 1)
+
     return(p)
 }

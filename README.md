@@ -23,6 +23,32 @@ Performs multi-variate analysis (PCA, CCA, PLS, R/SGCCA, etc.) and produces text
 We consider J data matrices X1 ,..., XJ. Each n × pj data matrix Xj = [ xj1, ..., xjpj ] is called a block and represents a set of pj variables observed on n individuals. The number and the nature of the variables may differ from one block to another, but the individuals must be the same across blocks. We assume that all variables are centered. The objective of RGCCA is to find, for each block, a weighted composite of variables (called block component) yj = Xj . aj, j = 1 ,..., J (where aj is a column-vector with pj elements) summarizing the relevant information between and within the blocks. The block components are obtained such that (i) block components explain well their own block and/or (ii) block components that are assumed to be connected are highly correlated. In addition, RGCCA integrates a variable selection procedure, called SGCCA, allowing the identification of the most relevant features (see [here](https://github.com/BrainAndSpineInstitute/rgcca_Rpackage/blob/master/README.md#rsgcca-from-the-cran-vignette-3) for more information).
 
 
+## Setting up (not for Windows)
+
+### Conda installation
+
+```
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+sh Miniconda3-latest-Linux-x86_64.sh [yes, then ./miniconda3 and no]
+source ./miniconda3/bin/activate
+```
+
+### Package installation
+
+```
+PACKAGE_NAME=rgcca_galaxy
+git clone https://github.com/BrainAndSpineInstitute/${PACKAGE_NAME}.git
+cd ${PACKAGE_NAME}
+conda create -n ${PACKAGE_NAME} -c conda-forge -c bioconda -c icm-iconics planemo
+```
+
+### Usage
+```
+source ../miniconda3/bin/activate ${PACKAGE_NAME} [if environment is not activated]
+planemo serve [wait, then go to the link]
+```
+
+
 ## 1. Load the inputs
 
 
