@@ -1,12 +1,12 @@
 tool_test_output\.html
-
 tool_test_output\.json
 
 \.Rhistory
-
 \.idea/
 
 *block*
+
+!R/*
 !test-data/*
 
 Rplots\.pdf

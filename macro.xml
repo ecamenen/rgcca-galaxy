@@ -14,7 +14,7 @@
         <output name="ave" file="@PATH@/ave.pdf" ftype="pdf"/>
         <output name="design" file="@PATH@/design.pdf" ftype="pdf"/>
         <output name="R_results" file="@PATH@/rgcca.result.RData" compare="sim_size" delta="1000" ftype="rdata"/>
-        <output name="variable_table" file="@PATH@/variable_table.tsv">
+        <output name="variable_table" file="@PATH@/variables.tsv">
             <assert_contents>
                 <has_n_columns n="5"/>
                 <has_line_matching
