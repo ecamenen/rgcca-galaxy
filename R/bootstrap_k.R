@@ -2,7 +2,7 @@
 #'
 #' Internal function for computing boostrap of RGCCA
 #'
-#' @inheritParams rgcca.analyze
+#' @inheritParams rgcca
 #' @inheritParams plot_var_2D
 #' @return A list of RGCCA bootstrap weights
 #' @examples
@@ -10,64 +10,72 @@
 #' data("Russett")
 #' blocks = list(agriculture = Russett[, seq(3)], industry = Russett[, 4:5],
 #'     politic = Russett[, 6:11] )
-#' rgcca_out = rgcca.analyze(blocks)
+#' rgcca_out = rgcca(blocks)
 #' bootstrap_k(rgcca_out)
 #' bootstrap_k(rgcca_out, lapply(blocks, scale), superblock = FALSE)
 #' @export
 bootstrap_k <- function(
     rgcca,
-    A = NULL,
-    C = 1 - diag(length(A)),
-    tau = rep(1, length(A)),
-    ncomp = rep(2, length(A)),
+    blocks = NULL,
+    connection = 1 - diag(length(blocks)),
+    tau = rep(1, length(blocks)),
+    ncomp = rep(2, length(blocks)),
     scheme = "factorial",
     init = "svd",
     bias = TRUE,
-    tol = 1e-08,
+    tol = 1e-03,
     type = "rgcca",
-    superblock = TRUE) {
+    superblock = TRUE,
+    response = NULL) {
 
-    if (is.null(A))
-        blocks.all <- rgcca$blocks
-    else
-        blocks.all <- A
+    if (is.null(blocks)) {
+        blocks <- intersection(rgcca$call$blocks) -> blocks.all
+        connection <- rgcca$call$connection
+        ncomp <- rgcca$call$ncomp
+        scheme <- rgcca$call$scheme
+        bias <- rgcca$call$bias
+        tol <- rgcca$call$tol
+        superblock <- rgcca$call$superblock
+        type <- rgcca$call$type
+        init <- rgcca$call$init
 
-    if (is.null(A)) {
-        A <- rgcca$blocks
-        C <- rgcca$blocks
-        ncomp <- rgcca$ncomp
-        scheme <- rgcca$scheme
-        bias <- rgcca$bias
-        tol <- rgcca$tol
-        superblock <- rgcca$superblock
-        type <- class(rgcca)
-
-        if (is(rgcca, "sgcca"))
-            tau <- rgcca$c1
+        if (rgcca$call$type %in% c("sgcca","spls","spca"))
+            tau <- rgcca$call$c1
         else
-            tau <- rgcca$tau
+            tau <- rgcca$call$tau
 
         if (superblock) {
-            A <- A[-length(A)]
-            C <- NULL
+            blocks <- blocks[-length(blocks)]
+            connection <- NULL
         }
+
+        if (!is.null(rgcca$call$response))
+            response <- length(rgcca$call$blocks)
+
+    } else
+        blocks.all <- intersection(blocks)
+
+    boot_blocks <- list(NULL, NULL, NULL)
+    while (any(sapply(boot_blocks, function(x) length(x)) == 0)) {
+        # Shuffle rows
+        id_boot <- sample(NROW(blocks[[1]]), replace = TRUE)
+
+        if (any(sapply(blocks, function(x) is.null(attr(x, 'scaled:center')))))
+                stop("Blocks should be scaled before performing bootstraps.")
+        else
+            boot_blocks <- lapply(
+                blocks, 
+                function(x) scale2(x[id_boot, , drop = FALSE], scale = FALSE))
+
+        boot_blocks <- remove_null_sd(boot_blocks)
     }
 
-    # Shuffle rows
-    id_boot <- sample(NROW(A[[1]]), replace = TRUE)
-
-    if (any(sapply(A, function(x) is.null(attr(x, 'scaled:center')))))
-            stop("Blocks should be scaled before performing bootstraps.")
-    else
-        boot_blocks <- lapply(A, function(x) scale2(x[id_boot, ], scale = FALSE))
-
-    boot_blocks <- remove_null_sd(boot_blocks)
-
     # Get boostraped weights
-    w <- rgcca.analyze(
+    w <- rgcca(
         boot_blocks,
-        C,
+        connection,
         superblock = superblock,
+        response = response,
         tau = tau,
         ncomp = ncomp,
         scheme = scheme,
@@ -81,9 +89,9 @@ bootstrap_k <- function(
 
     # Add removed variables
     missing_var <- lapply(
-        seq(length(w)),
-        function(x) setdiff(colnames(blocks.all[[x]]), rownames(w[[x]]))
-    )
+            seq(length(w)),
+            function(x) setdiff(colnames(blocks.all[[x]]), rownames(w[[x]]))
+        )
 
     missing_tab <- lapply(
         seq(length(w)),
@@ -103,7 +111,7 @@ bootstrap_k <- function(
             w[[x]]
         })
 
-    w <- lapply(seq(length(w)), function(x) w[[x]][colnames(blocks.all[[x]]), ])
+    w <- lapply(seq(length(w)), function(x) w[[x]][colnames(blocks.all[[x]]), , drop = FALSE])
 
     names(w) <- names(blocks.all)
 

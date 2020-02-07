@@ -13,24 +13,33 @@
 #' data("Russett")
 #' blocks = list(agriculture = Russett[, seq(3)], industry = Russett[, 4:5],
 #'     politic = Russett[, 6:11] )
-#' rgcca_out = rgcca.analyze(blocks)
-#' boot = bootstrap(rgcca_out, 2, FALSE)
-#' get_bootstrap(rgcca_out, boot)
+#' rgcca_out = rgcca(blocks)
+#' boot = bootstrap(rgcca_out, 2, FALSE, n_cores = 1)
+#' get_bootstrap(rgcca_out, boot, n_cores = 1)
 #' @export
+#' @importFrom stats pt
 get_bootstrap <- function(
     rgcca,
     w,
     comp = 1,
     i_block = length(w[[1]]),
-    collapse = TRUE,
+    collapse = FALSE,
     n_cores = parallel::detectCores() - 1) {
+
+    check_ncol(rgcca$Y, i_block)
 
     if (n_cores == 0)
         n_cores <- 1
 
-    if (comp > min(rgcca$ncomp))
+    if (collapse && rgcca$call$superblock) {
+        rgcca$a <- rgcca$a[-length(rgcca$a)]
+        if (i_block > length(rgcca$a))
+            i_block <- length(rgcca$a)
+    }
+
+    if (comp > min(rgcca$call$ncomp))
         stop("Selected dimension was not associated to every blocks",
-            exit_code = 113)
+             exit_code = 113)
 
     cat("Binding in progress...")
 
@@ -43,10 +52,10 @@ get_bootstrap <- function(
 
     for (i in J) {
 
-        w_bind <- parallel::mclapply(w,
-            function(x)
-                x[[i]][, comp],
-            mc.cores = n_cores)
+        w_bind <- parallel::mclapply(
+            w,
+            function(x) x[[i]][, comp],
+             mc.cores = n_cores)
 
         weight[[i]] <- rgcca$a[[i]][, comp]
         w_select <- matrix(
@@ -60,69 +69,75 @@ get_bootstrap <- function(
 
         n <- seq(NCOL(w_select))
 
-        if (is(rgcca, "sgcca")) {
+        if (rgcca$call$type %in% c("spls", "spca", "sgcca")) {
 
             occ[[i]] <- unlist(
                 parallel::mclapply(n,
-                function(x)
-                    sum(w_select[, x] != 0) / length(w_select[, x]),
-                mc.cores = n_cores))
-
+                                   function(x)
+                                       sum(w_select[, x] != 0) / length(w_select[, x]),
+                                   mc.cores = n_cores))
+            
         }
 
         mean[[i]] <- unlist(parallel::mclapply(n,
-            function(x) mean(w_select[,x]),
-            mc.cores = n_cores
+                                               function(x) mean(w_select[,x]),
+                                               mc.cores = n_cores
         ))
-        sd[[i]] <- unlist(
-            parallel::mclapply(n,
-                function(x) sd(w_select[,x]),
-                mc.cores = n_cores
-        ))
+        if (NCOL(w_select) == 1)
+            sd[[i]] <- 1
+        else
+            sd[[i]] <- unlist(
+                parallel::mclapply(n,
+                                   function(x) sd(w_select[,x]),
+                                   mc.cores = n_cores
+                ))
 
         rm(w_select); gc()
     }
-
+    
+    n_boot <- length(w)
     rm(w); gc()
 
     occ <- unlist(occ)
     mean <- unlist(mean)
     weight <- unlist(weight)
-    sd <- unlist(sd)
+    sd <- unlist(sd) / sqrt(n_boot)
 
-    cat("OK", append = TRUE)
+    cat("OK.\n", append = TRUE)
 
-    p.vals <- pnorm(0, mean = abs(mean), sd = sd)
-    tail <- qnorm(1 - .05 / 2)
+    p.vals <- 2 * pt(abs(weight)/sd, lower.tail = FALSE, df = n_boot - 1)
+    tail <- qt(1 - .05 / 2, df = n_boot - 1)
+
+#
 
     df <- data.frame(
         mean = mean,
         rgcca = weight,
-        intneg = mean - tail * sd,
-        intpos = mean + tail * sd,
+        intneg = mean - (tail * sd/sqrt(n_boot)),
+        intpos = mean + (tail * sd/sqrt(n_boot)),
         br = abs(mean) / sd,
         p.vals,
         BH = p.adjust(p.vals, method = "BH")
     )
 
-    if (is(rgcca, "sgcca")) {
+    if (rgcca$call$type %in% c("spls", "spca", "sgcca")) {
         index <- 8
         df$occ <- occ
     }else{
         index <- 5
         df$sign <- rep("", NROW(df))
-
+        
         for (i in seq(NROW(df)))
             if (df$intneg[i]/df$intpos[i] > 0)
                 df$sign[i] <- "*"
-
+        
     }
 
     if (collapse)
         df$color <- as.factor(get_bloc_var(rgcca$a, collapse = collapse))
 
     zero_var <- which(df[, 1] == 0)
-    if (length(zero_var) != 0)
+    if (NROW(df) > 1 && length(zero_var) != 0)
         df <- df[-zero_var, ]
 
     b <- data.frame(order_df(df, index, allCol = TRUE), order = NROW(df):1)
@@ -130,10 +145,12 @@ get_bootstrap <- function(
         list(
             mean = "Mean bootstrap weights",
             br = "Bootstrap-ratio",
-            sign = "Significant 95% interval",
-            occ = "Non-zero occurences"
+            sign = "Significant 95% \nbootstrap interval",
+            occ = "Non-zero occurences",
+            rgcca = "RGCCA weights"
         )
     attributes(b)$type <- class(rgcca)
+    attributes(b)$n_boot <- n_boot
     class(b) <- c(class(b), "bootstrap")
 
     return(b)

@@ -8,10 +8,14 @@
 #' data("Russett")
 #' blocks = list(agriculture = Russett[, seq(3)], industry = Russett[, 4:5],
 #'     politic = Russett[, 6:11] )
-#' rgcca_out = rgcca.analyze(blocks)
+#' rgcca_out = rgcca(blocks)
 #' plot_network(rgcca_out)
 #' @export
-plot_network <- function(rgcca) {
+plot_network <- function(
+    rgcca, 
+    title = paste0("Common rows between blocks : ",
+                   NROW(rgcca$call$blocks[[1]]))) {
+
     # Avoid random
     set.seed(1)
     V <- E <- NULL
@@ -27,8 +31,8 @@ plot_network <- function(rgcca) {
         directed = FALSE)
 
     if (all(is.na(nodes[, par]))) {
-        nodes[, par] <- rep("optimal", length(rgcca$blocks))
-        V(net)$tau <- rep(1, length(rgcca$blocks))
+        nodes[, par] <- rep("optimal", length(rgcca$call$blocks))
+        V(net)$call$tau <- rep(1, length(rgcca$call$blocks))
     }
 
     V(net)$color <- "khaki2"
@@ -43,8 +47,7 @@ plot_network <- function(rgcca) {
         sep = " ")
     V(net)$shape <- "square"
     E(net)$width <- E(net)$weight * 2
-
-    plot(
+      plot(
         net,
         cex.main = 5,
         edge.color = "gray70",
@@ -54,7 +57,8 @@ plot_network <- function(rgcca) {
         vertex.label.dist = 6,
         vertex.label.degree = 1.5,
         vertex.size = 23,
-        main = paste0("Common rows between blocks : ", NROW(rgcca$blocks[[1]]))
+        main = title
+   
     )
 
 }

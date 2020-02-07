@@ -2,10 +2,9 @@
 #'
 #' Histogram of the model quality (based on Average Variance Explained)
 #' for each blocks and sorted in decreasing order
-#'
 #' @inheritParams plot_ind
 #' @inheritParams plot_histogram
-#' @seealso \code{\link[RGCCA]{rgcca}}, \code{\link[RGCCA]{sgcca}}
+#' @seealso \code{\link[RGCCA]{rgccad}}, \code{\link[RGCCA]{sgcca}}
 #' @examples
 #' random_val = function(y=1) lapply(seq(4),
 #' function(x) matrix(runif(4), y, 2))
@@ -15,25 +14,29 @@
 #' library("ggplot2")
 #' for(i in seq(1,4))
 #' names(rgcca_out$AVE$AVE_X[[i]]) <- c(1,2)
-#' plot_ave(rgcca_out)
+#' # plot_ave(rgcca_out) #TODO
 #' @export
 plot_ave <- function(
     rgcca,
     cex = 1,
-    cex_sub = 16 * cex,
-    cex_axis = 10 * cex) {
+    title = "Average Variance Explained",
+    colors = NULL,
+    ...) {
 
-    if (is(rgcca, "pca")) {
+    if (rgcca$call$type == "pca") {
         rgcca$AVE$AVE_X = rgcca$AVE$AVE_X[1]
-        rgcca$ncomp = rgcca$ncomp[1]
+        rgcca$call$ncomp = rgcca$call$ncomp[1]
         rgcca$a = rgcca$a[1]
     }
-    
+
     names(rgcca$AVE$AVE_X) <- NULL
     ave <- 100 * unlist(rgcca$AVE$AVE_X)
     blocks <- factor(unlist(lapply(seq(length(names(rgcca$a))),
-            function(x) rep(names(rgcca$a)[x], rgcca$ncomp[x]))),
+            function(x) rep(names(rgcca$a)[x], rgcca$call$ncomp[x]))),
         levels = names(rgcca$a))
+
+    if (is.null(names(ave)))
+        names(ave) <- rep(1, length(ave))
     ncomp <- as.factor(names(ave))
 
     y_ave_cum <- lapply(
@@ -49,6 +52,7 @@ plot_ave <- function(
     ave_label[ave_label < max(y_ave_cum) / 20] <- ""
 
     df <- data.frame(ave, blocks, ncomp, stringsAsFactors = FALSE)
+    class(df) <- c(class(df), "d_ave")
 
     p <- ggplot(data = df, 
         aes(
@@ -61,13 +65,12 @@ plot_ave <- function(
     p <- plot_histogram(
         p, 
         df, 
-        "Average Variance Explained",
+        title,
         cex = cex,
-        cex_sub = cex_sub,
-        cex_axis = cex_axis) +
+        ...) +
     scale_fill_manual(
-        values = color_group(levels(df$ncomp)),
-        labels = gsub("comp", " ", levels(df$ncomp))) + 
+        values = color_group(levels(df$ncomp), colors = colors),
+        labels = gsub("comp", " ", levels(df$ncomp))) +
     geom_col(position = position_stack(reverse = TRUE)) +
     labs(subtitle = print_comp(rgcca, outer = TRUE)) +
     geom_text(aes(y = y_ave_cum),  cex = 3.5 * cex, color = "white") +

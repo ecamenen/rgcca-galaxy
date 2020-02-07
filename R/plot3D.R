@@ -5,12 +5,14 @@
 #' @inheritParams plot2D
 #' @inheritParams get_comp
 #' @param type A character for the type of plot : either "ind" for individual plot or "var" for corcircle
+#' @param colors reoresenting a vector of colors
+#' 
 #' @examples
 #' library(RGCCA)
 #' data("Russett")
 #' blocks = list(agriculture = Russett[, seq(3)],
 #'     politic = Russett[, 6:11] )
-#' rgcca_out = rgcca.analyze(blocks, ncomp = rep(3, 2))
+#' rgcca_out = rgcca(blocks, ncomp = rep(3, 2))
 #' df = get_comp(rgcca_out, compz = 3)
 #' plot3D(df, rgcca_out, i_block = 2)
 #' plot3D(df, rgcca_out, i_block = 2, text = FALSE)
@@ -35,16 +37,19 @@ plot3D <- function(
     i_block_z = i_block,
     text = TRUE,
     title = "Sample plot",
+    colors = NULL,
     type = "ind",
     cex = 1,
     cex_point = 3 * cex,
     cex_lab = 19 * cex) {
 
-    if (length(unique(df$resp)) == 1) {
-        df$resp = as.factor(rep("a", length(df$resp)))
-        midcol = "#cd5b45"
+    colors <- check_colors(colors)
+
+    if (is.na(colors[2]) && length(unique(df$resp)) == 1) {
+        df$resp <- as.factor(rep("a", length(df$resp)))
+        midcol <- "#cd5b45"
     } else
-        midcol = "gray"
+        midcol <- "gray"
 
     axis <- function(x, i)
         list(
@@ -60,10 +65,10 @@ plot3D <- function(
             cut(
                 x,
                 breaks = n,
-                labels = colorRampPalette(c("#A50026", midcol,  "#313695"))(n),
+                labels = colorRampPalette(c(colors[1], colors[2], colors[3]))(n),
                 include.lowest = TRUE)
         else
-            color_group(seq(length(unique(df$resp))))
+            color_group(seq(length(unique(df$resp))), colors = colors)
     }
 
     subdf <- function(x) 
@@ -85,7 +90,7 @@ plot3D <- function(
             )
         )
 
-        color <- color_group(seq(length(l)))[x]
+        color <- color_group(seq(length(l)), colors = colors)[x]
 
         if (text) {
             func$mode <- "text"
@@ -123,7 +128,7 @@ plot3D <- function(
             showlegend = FALSE,
             color = df$resp,
             size = I(200),
-            colors = c("#A50026", midcol,  "#313695"),
+            colors = c(colors[1], colors[2], colors[3]),
             visible = visible
         )
 

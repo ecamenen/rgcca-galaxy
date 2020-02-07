@@ -1,8 +1,8 @@
 # An intern function used by sgcca.permute to perform multiple sgcca with permuted rows
-# sgcca.crit(A = blocks, scale = FALSE)
-sgcca.crit <- function(
+# rgcca_permutation_k(A = blocks, scale = FALSE)
+rgcca_permutation_k <- function(
     blocks,
-    par = list("ncomps", expand.grid(rep(list(1:2), length(blocks)))),
+    par = list("ncomps", expand.grid(rep(list(seq(2)), length(blocks)))),
     connection = 1 - diag(length(blocks)),
     response = NULL,
     tau = rep(1, length(blocks)),
@@ -11,15 +11,15 @@ sgcca.crit <- function(
     scale = TRUE,
     init = "svd",
     bias = TRUE,
-    tol = 1e-08,
+    tol = 1e-03,
     type = "rgcca",
     superblock = TRUE,
     perm = TRUE,
     n_cores = parallel::detectCores() - 1) {
 
     if (perm) {
-        for (k in 1:length(blocks))
-            blocks[[k]] <- blocks[[k]][sample(1:nrow(blocks[[k]])),]
+        for (k in seq(length(blocks)))
+            blocks[[k]] <- as.matrix(blocks[[k]][sample(seq(NROW(blocks[[k]]))), ])
     }
 
     simplify2array(
@@ -35,7 +35,7 @@ sgcca.crit <- function(
                         tau <- par[[2]][i, ]
                         type <- "sgcca"
                 })
-                crit <- rgcca.analyze(
+                crit <- rgcca(
                         blocks = blocks,
                         connection = connection,
                         response = response,
@@ -47,9 +47,11 @@ sgcca.crit <- function(
                         type = type,
                         init = init,
                         bias = bias,
-                        tol = tol
+                        tol = tol,
+                        quiet = TRUE,
+                        method = "complete"
                     )$crit
-                return(mean(sapply(crit, function(x) x[length(x)])))
+                return(sum(sapply(crit, function(x) sum(x))))
             },
         mc.cores = n_cores))
 }

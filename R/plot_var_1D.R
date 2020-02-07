@@ -1,6 +1,6 @@
-#' Histogram of a fingerprint
+#' Barplot of a fingerprint
 #'
-#' Histogram of the higher outer weight vectors for a component of a block 
+#' Barplot of the higher outer weight vectors for a component of a block 
 #' (by default, the superblock or the last one) analysed by R/SGCCA
 #'
 #' @inheritParams plot_var_2D
@@ -9,26 +9,25 @@
 #' @param type A string giving the criterion to selects biomarkers : either 
 #' "cor" for correlation between the component and the block
 #' or "weight" for the weight of the RGCCA
-#' @seealso \code{\link[RGCCA]{rgcca}}, \code{\link[RGCCA]{sgcca}}
+#' @seealso \code{\link[RGCCA]{rgccad}}, \code{\link[RGCCA]{sgcca}}
 #' @examples
 #' weights = lapply(seq(3), function(x) matrix(runif(7*2), 7, 2))
 #' for (i in seq(3))
 #' row.names(weights[[i]]) <- paste0(letters[i],
 #'      letters[seq(NROW(weights[[i]]))])
 #' weights[[4]] = Reduce(rbind, weights)
-#' rgcca_out = list(a = weights)
+#' rgcca_out = list(a = weights, call = list(type="rgcca", ncomp = rep(2,4)))
 #' names(rgcca_out$a) = LETTERS[seq(4)]
-#' rgcca_out$blocks = lapply(rgcca_out$a, t)
-#' rgcca_out$superblock = TRUE
+#' rgcca_out$call$blocks = lapply(rgcca_out$a, t)
+#' rgcca_out$call$superblock = TRUE
 #' # With the 1rst component of the superblock
 #' plot_var_1D(rgcca_out, 1, type = "weight")
 #' # With the 2nd component of the 1rst block by selecting the ten higher weights
 #' plot_var_1D(rgcca_out, 2, 10, 1, type = "weight")
-#' library(RGCCA)
 #' data("Russett")
 #' blocks = list(agriculture = Russett[, seq(3)], industry = Russett[, 4:5],
 #'     politic = Russett[, 6:11] )
-#' rgcca_out = rgcca.analyze(blocks)
+#' rgcca_out = rgcca(blocks)
 #' plot_var_1D(rgcca_out, collapse = TRUE)
 #' @export
 plot_var_1D <- function(
@@ -38,9 +37,11 @@ plot_var_1D <- function(
     i_block = length(rgcca$a),
     type = "cor",
     collapse = FALSE,
-    cex = 1,
-    cex_sub = 16 * cex,
-    cex_axis = 10 * cex) {
+    title = NULL,
+    colors = NULL,
+    ...) {
+
+    check_ncol(rgcca$a, i_block)
 
     df <- get_ctr2(
         rgcca = rgcca,
@@ -52,18 +53,21 @@ plot_var_1D <- function(
         collapse = collapse,
         remove_var = FALSE
     )
+    resp <- df$resp
 
-    if (i_block < length(rgcca$a) || is(rgcca, "pca"))
-        rgcca$superblock <- FALSE
-    
+    if (i_block < length(rgcca$a) || rgcca$call$type == "pca")
+        rgcca$call$superblock <- FALSE
+
     J <- names(rgcca$a)
 
-    title <- ifelse(type == "cor",
+    if (is.null(title))
+        title <- ifelse(type == "cor",
             "Variable correlations with",
             "Variable weights on")
 
     # sort in decreasing order
     df <- data.frame(order_df(df, 1, TRUE), order = NROW(df):1)
+    class(df) <- c(class(df), "d_var1D")
 
     # max threshold for n
     if (NROW(df) >= n_mark)
@@ -71,10 +75,11 @@ plot_var_1D <- function(
 
     # if the superblock is selected, color the text of the y-axis according
     # to their belonging to each blocks
-    if ((rgcca$superblock && i_block == length(rgcca$a)) || collapse) {
-        color <- factor(df$resp)
-        levels(color) <- color_group(color)
-        p <- ggplot(df, aes(order, df[, 1], fill = df$resp))
+
+    if ((rgcca$call$superblock && i_block == length(rgcca$a)) || collapse) {
+        color <- factor(resp)
+        levels(color) <- color_group(color, colors = colors)
+        p <- ggplot(df, aes(order, df[, 1], fill = resp))
     } else {
         color <- "black"
         p <- ggplot(df, aes(order, df[, 1], fill = abs(df[, 1])))
@@ -85,9 +90,7 @@ plot_var_1D <- function(
         df,
         title,
         as.character(color),
-        cex = cex,
-        cex_sub = cex_sub,
-        cex_axis = cex_axis
+        ...
     ) +
     labs(subtitle = print_comp(rgcca, comp, i_block))
 
@@ -98,13 +101,13 @@ plot_var_1D <- function(
     else
         col <- J[-length(J)]
 
-    matched <- match(rev(unique(df$resp)), col)
+    matched <- match(rev(unique(resp)), col)
 
     # Force all the block names to appear on the legend
     if (length(color) != 1)
-        p <- order_color(rgcca$a, p, matched, collapse)
+        p <- order_color(rgcca$a, p, matched, collapse, colors)
 
-    if ((!rgcca$superblock || i_block != length(rgcca$a)) && !collapse)
+    if ((!rgcca$call$superblock || i_block != length(rgcca$a)) && !collapse)
             p <- p + theme(legend.position = "none")
 
     return(p)

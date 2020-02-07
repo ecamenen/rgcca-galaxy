@@ -16,16 +16,15 @@ is.character2 <- function(x) {
     # is. character() consider a string with '1.2' as a character, not this function.
     # NA are produced by converting a character into an integer as.vector, avoid
     # factors of character in integer without NA
-
+ 
     # NA tolerance :
-
+    
     x <- as.vector(x)
-
+    
     any(
         is.na(
             tryCatch(
                 as.integer(na.omit(x[x != "NA"])),
                 warning = function(w) NA
-    )))
+            )))
 }
-

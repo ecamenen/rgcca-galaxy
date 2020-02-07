@@ -21,7 +21,6 @@ getArgs <- function() {
             opt_str = c("-d", "--datasets"),
             type = "character",
             metavar = "path list",
-            default = opt[20],
             help = "List of comma-separated file paths corresponding to the
             blocks to be analyzed (one per block and without spaces between
             them; e.g., path/file1.txt,path/file2.txt) [required]"
@@ -323,13 +322,13 @@ post_check_arg <- function(opt, rgcca) {
     for (x in c("block", "block_y")) {
         if (!is.null(opt[[x]])) {
             if (opt[[x]] == 0)
-                opt[[x]] <- length(rgcca$blocks)
-            opt[[x]] <- check_blockx(x, opt[[x]], rgcca$blocks)
+                opt[[x]] <- length(rgcca$call$blocks)
+            opt[[x]] <- check_blockx(x, opt[[x]], rgcca$call$blocks)
         }
     }
 
     for (x in c("compx", "compy"))
-        opt[[x]] <- check_compx(x, opt[[x]], rgcca$ncomp, opt$block)
+        opt[[x]] <- check_compx(x, opt[[x]], rgcca$call$ncomp, opt$block)
 
     return(opt)
 }
@@ -412,12 +411,12 @@ opt <- list(
     o7 = "variables.tsv",
     o8 = "rgcca_result.RData",
     datasets = paste0("inst/extdata/",
-        c("agriculture","industry", "politic"),
+        c("agriculture", "industry", "politic"),
         ".tsv",
         collapse = ",")
 )
 
-load_libraries(c("RGCCA", "ggplot2", "optparse", "scales", "igraph", "ggrepel"))
+load_libraries(c("RGCCA", "ggplot2", "optparse", "scales", "igraph", "ggrepel", "MASS"))
 
 tryCatch(
     opt <- check_arg(parse_args(getArgs())),
@@ -445,7 +444,7 @@ blocks <- load_blocks(opt$datasets, opt$names, opt$separator)
 group <- load_response(blocks, opt$group, opt$separator, opt$header)
 connection <- load_connection(file = opt$connection, sep = opt$separator)
 
-rgcca_out <- rgcca.analyze(
+rgcca_out <- rgcca(
     blocks = blocks,
     connection = connection,
     response = opt$response,
@@ -461,7 +460,7 @@ opt <- post_check_arg(opt, rgcca_out)
 
 ########## Plot ##########
 
-if (rgcca_out$ncomp[opt$block] == 1 && is.null(opt$block_y)) {
+if (rgcca_out$call$ncomp[opt$block] == 1 && is.null(opt$block_y)) {
     warning("With a number of component of 1, a second block should be chosen to perform an individual plot")
 } else {
     (
@@ -479,7 +478,7 @@ if (rgcca_out$ncomp[opt$block] == 1 && is.null(opt$block_y)) {
     save_plot(opt$o1, individual_plot)
 }
 
-if (rgcca_out$ncomp[opt$block] > 1) {
+if (rgcca_out$call$ncomp[opt$block] > 1) {
     (
         corcircle <- plot_var_2D(
             rgcca_out,
@@ -510,6 +509,36 @@ save_plot(opt$o4, ave)
 design <- function() plot_network(rgcca_out)
 save_plot(opt$o5, design)
 
-save_ind(rgcca_out, 1, 2, opt$o6)
-save_var(rgcca_out, 1, 2, opt$o7)
+save_ind(rgcca_out, opt$compx, opt$compy, opt$o6)
+save_var(rgcca_out, opt$compx, opt$compy, opt$o7)
+
+if (!is.null(opt$response)) {
+    crossval <- rgcca_crossvalidation(rgcca_out)
+    cat(paste("Cross-validation score (leave-one-out) :", crossval$scores))
+    plot_ind(rgcca_out, predicted = crossval)
+}
+
+# Bootstrap
+boot <- bootstrap(rgcca_out, n_boot = 5)
+selected.var <- get_bootstrap(rgcca_out, boot, opt$compx, opt$block)
+plot_bootstrap_2D(selected.var)
+plot_bootstrap_1D(selected.var)
+
+# Permutation
+
+if (length(blocks) > 1) {
+    perm <- rgcca_permutation(
+        blocks,
+        connection = connection,
+        response = opt$response, 
+        superblock = opt$superblock,
+        tau = opt$tau,
+        ncomp = opt$ncomp,
+        scheme = opt$scheme,
+        scale = opt$scale,
+        type = opt$type, 
+        nperm = 5)
+    plot_permut_2D(perm)
+}
+
 save(rgcca_out, file = opt$o8)

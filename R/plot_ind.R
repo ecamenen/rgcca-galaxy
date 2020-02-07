@@ -2,6 +2,7 @@
 #'
 #' Plot the two components of a RGCCA
 #'
+#' @inheritParams plot2D
 #' @param rgcca A list giving the results of a R/SGCCA
 #' @param resp A vector of characters corresponding either to a qualitative
 #' variable with levels or a continuous variable
@@ -17,10 +18,6 @@
 #' @param reponse_name A character giving the legend title
 #' @param no_overlap A boolean to avoid overlap in plotted text
 #' @param predicted A list containing as  2nd element a matrix of predicted components
-#' @param cex An integer for the size of the plot parameters
-#' @param cex_sub An integer for the size of the subtitle
-#' @param cex_point An integer for the size of the points or the text in the plot
-#' @param cex_lab An integer for the size of the axis titles
 #' @examples
 #' coord = lapply(seq(3),
 #'    function(x) matrix(runif(15 * 2, min = -1), 15, 2))
@@ -31,11 +28,22 @@
 #' # Using a superblock
 #' resp = as.matrix(rep(LETTERS[seq(3)], each = 5))
 #' row.names(resp) = seq(15)
+#' rgcca_out$call$type="rgcca"
 #' plot_ind(rgcca_out, resp)
 #' # Using the first block
 #' resp = as.matrix(runif(15, min=-15, max = 15))
 #' row.names(resp) = seq(15)
+#' rgcca_out$call$type="rgcca"
 #' plot_ind(rgcca_out, resp, 1, 2, 1)
+#' data(Russett)
+#' X_agric =as.matrix(Russett[,c("gini","farm","rent")])
+#' X_ind = as.matrix(Russett[,c("gnpr","labo")])
+#' X_polit = as.matrix(Russett[ , c("demostab", "dictator")])
+#' A = list(X_agric, X_ind, X_polit)
+#' C = matrix(c(0, 0, 1, 0, 0, 1, 1, 1, 0), 3, 3)
+#' result.rgcca = rgcca(A, C, tau = c(1, 1, 1), scheme = "factorial",
+#' scale = TRUE,ncomp=rep(2,3))
+#' plot_ind(result.rgcca,i_block=1)
 #' @export
 plot_ind <- function(
     rgcca,
@@ -48,15 +56,14 @@ plot_ind <- function(
     reponse_name = "Response",
     no_overlap = FALSE,
     predicted = NULL,
-    cex = 1,
-    cex_sub = 16 * cex,
-    cex_point = 3 * cex,
-    cex_lab = 19 * cex
-    ) {
+    title = "Sample space",
+    ...){
 
     if (is.null(i_block_y))
         i_block_y <- i_block
-    
+
+    check_ncol(rgcca$Y, i_block)
+
     resp <- check_response(resp, rgcca$Y)
 
     df <- get_comp(
@@ -68,9 +75,7 @@ plot_ind <- function(
         i_block_y = i_block_y,
         predicted = predicted
     )
-
-    if (NROW(df) > 100)
-        cex_point <- 2
+    class(df) <- c(class(df), "d_ind")
 
     if (!is.null(predicted))
             p <- ggplot(df, aes(df[, 1], df[, 2], color = df$resp))
@@ -87,7 +92,7 @@ plot_ind <- function(
     p <- plot2D(
             rgcca,
             df,
-            "Sample",
+            title,
             df$resp,
             reponse_name,
             compx,
@@ -97,15 +102,12 @@ plot_ind <- function(
             text,
             i_block_y,
             no_overlap = no_overlap,
-            cex = cex,
-            cex_sub = cex_sub,
-            cex_point = cex_point,
-            cex_lab = cex_lab
+            ...
         )
 
     # remove legend if missing
     if (length(unique(df$resp)) == 1)
-        p + theme(legend.position = "none")
-    else
-        p
+        p <- p + theme(legend.position = "none")
+
+    return(p)
 }

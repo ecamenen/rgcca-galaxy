@@ -6,7 +6,7 @@ to_numeric <- function(df) {
                 tryCatch(
                     as.numeric(df[i]),
                     warning = function(e) NA
-        )),
+                )),
         NROW(df),
         NCOL(df),
         dimnames = list(row.names(df), colnames(df))

@@ -14,23 +14,28 @@
 #' data("Russett")
 #' blocks = list(agriculture = Russett[, seq(3)], industry = Russett[, 4:5],
 #'     politic = Russett[, 6:11] )
-#' rgcca_out = rgcca.analyze(blocks, tau = 0.75, type = "sgcca")
-#' boot = bootstrap(rgcca_out, 2)
-#' selected.var = get_bootstrap(rgcca_out, boot)
+#' rgcca_out = rgcca(blocks, tau = 0.75, type = "sgcca")
+#' boot = bootstrap(rgcca_out, 2, n_cores = 1)
+#' selected.var = get_bootstrap(rgcca_out, boot, n_cores = 1)
 #' plot_bootstrap_1D(selected.var)
-#' rgcca_out = rgcca.analyze(blocks)
-#' boot = bootstrap(rgcca_out, 2)
-#' selected.var = get_bootstrap(rgcca_out, boot)
+#' rgcca_out = rgcca(blocks)
+#' boot = bootstrap(rgcca_out, 2, n_cores = 1)
+#' selected.var = get_bootstrap(rgcca_out, boot, n_cores = 1)
 #' plot_bootstrap_1D(selected.var)
 #' @export
 plot_bootstrap_1D <- function(
     b,
-    x = "br",
+    x = "rgcca",
     y = "occ",
     n = 50,
-    cex = 1,
-    cex_sub = 16 * cex,
-    cex_axis = 10 * cex) {
+    title = paste0(attributes(b)$indexes[[x]],
+                   "\n(",
+                   attributes(selected.var)$n_boot,
+                   " bootstraps)"), 
+    colors = c(color_group(seq(3))[1],  "white", color_group(seq(3))[3]),
+    ...) {
+
+    check_ncol(list(b), 1)
 
     set_occ <- function(x) {
         match.arg(x, names(attributes(b)$indexes))
@@ -44,9 +49,9 @@ plot_bootstrap_1D <- function(
     y <- set_occ(y)
 
     if (y == "sign") 
-        color = seq(2)
+        group = seq(2)
     else
-        color = 1
+        group = NA
 
     b <- head(b, n)
     p <- ggplot(
@@ -55,16 +60,18 @@ plot_bootstrap_1D <- function(
             y = b[, x],
             fill = b[, y]))
 
-    plot_histogram(
+    p <- plot_histogram(
         p,
         b,
-        attributes(b)$indexes[[x]],
-        color,
-        low_col = color_group(seq(3))[1],
-        mid_col = "white",
-        high_col = color_group(seq(3))[3],
-        cex = cex,
-        cex_sub = cex_sub,
-        cex_axis = cex_axis) +
+        title,
+        group,
+        colors,
+        ...) +
     labs(fill = attributes(b)$indexes[[y]])
+
+    if (x == "rgcca")
+    p <- p +
+        geom_errorbar(aes(ymin = intneg, ymax = intpos))
+
+    return(p)
 }

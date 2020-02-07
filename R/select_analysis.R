@@ -10,7 +10,9 @@
 #' @param ncomp A vector of integer giving the number of component for each
 #' blocks
 #' @param scheme A character giving the link function for covariance maximization
-#' @param type A character giving the type of analysis
+#' @param type A character giving the type of analysis: c('rgcca', 'cpca-w', 'gcca', 'hpca', 'maxbet-b', 'maxbet', 'maxdiff-b','maxdiff', 'maxvar-a', 'maxvar-b', 'maxvar', 'niles', 'r-maxvar', 'rcon-pca',
+#' 'ridge-gca', 'sabscor', 'ssqcor', 'ssqcor', 'ssqcov-1', 'ssqcov-2', 'ssqcov',
+#' 'sum-pca', 'sumcor', 'sumcov-1', 'sumcov-2', 'sumcov.', 'sabscov', 'plspm','cca', 'ra', 'ifa', 'pls','pca')
 #' @param verbose A boolean displaying the warnings
 #' @param quiet A boolean hidding the warnings
 #' @return \item{blocks}{A list of matrix}
@@ -33,7 +35,8 @@ select_analysis <- function(
     superblock = TRUE,
     type  = "rgcca",
     verbose = TRUE,
-    quiet = FALSE) {
+    quiet = FALSE,
+    response = NULL) {
 
     J <- length(blocks)
     msg_superblock <- "a superbloc is used"
@@ -66,9 +69,9 @@ select_analysis <- function(
     }
 
     warnSuper <- function(x) {
-        if (length(x) < (length(blocks))) {
+        if (length(x) < (length(blocks)) && is.null(response)) {
             warn.msg.super <<- c(warn.msg.super, deparse(substitute(x)))
-            return(c(x, x[1]))
+            return(c(x, max(x)))
         } else
             return(x)
     }
@@ -99,23 +102,18 @@ select_analysis <- function(
     } else
         superblock <- FALSE
 
-    if (length(grep("pls-?pm", tolower(type))) == 1) {
-        scheme <- setScheme("centroid")
-        tau <- setTau(rep(0, J))
-        # TODO: superblock allowed in PLS-PM, whos gonna call : Arthur
-    }
-
-    else if (tolower(type) == "pca") {
+    if (length(grep("s?pca", tolower(type))) == 1) {
         if (length(blocks) != 1)
             check_nblocks(blocks, type)
 
         scheme <- setScheme("horst")
-        tau <- setTau(c(1, 1))
         setSuperbloc()
+        if (tolower(type) == "pca")
+            tau <- setTau(c(1, 1))
     }
 
     # 2 Blocks cases
-    else if (tolower(type) %in% c("cca", "ra", "ifa", "pls")) {
+    else if (tolower(type) %in% c("cca", "ra", "ifa", "pls", "spls")) {
         set2Block(type)
 
         if (tolower(type) == "cca")
@@ -263,14 +261,16 @@ select_analysis <- function(
         }
 
     }
-
     else if (length(grep("[sr]gcca", tolower(type))) != 1) {
+        analysis <- c("rgcca", "cpca-w", "gcca", "hpca", "maxbet-b", "maxbet", 
+            "maxdiff-b","maxdiff", "maxvar-a", "maxvar-b", "maxvar", "niles", 
+            "r-maxvar", "rcon-pca", "ridge-gca", "sabscor", "ssqcor", "ssqcor", 
+            "ssqcov-1", "ssqcov-2", "ssqcov", "sum-pca", "sumcor", "sumcov-1", 
+            "sumcov-2", "sumcov", "sabscov", "plspm", "cca", "ra", "ifa", "pls",
+            "pca", "sgcca", "spls", "spca")
         stop(
-            "Wrong type of analysis. Please select one among the following
-            list: rgcca, cpca-w, gcca, hpca, maxbet-b, maxbet, maxdiff-b,
-            maxdiff, maxvar-a, maxvar-b, maxvar, niles, r-maxvar, rcon-pca,
-            ridge-gca, sabscor, ssqcor, ssqcor, ssqcov-1, ssqcov-2, ssqcov,
-            sum-pca, sumcor, sumcov-1, sumcov-2, sumcov., sabscov, plspm.",
+            paste0("Wrong type of analysis. Please select one among the following
+            list: ", paste(analysis, collapse = ", ")),
             exit_code = 112
         )
     }
