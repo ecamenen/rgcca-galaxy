@@ -419,7 +419,7 @@ opt <- list(
         collapse = ",")
 )
 
-load_libraries(c("ggplot2", "optparse", "scales", "igraph", "MASS", "openxlsx", "rlang", "Deriv"))
+load_libraries(c("ggplot2", "optparse", "scales", "igraph", "MASS", "rlang", "Deriv"))
 try(load_libraries("ggrepel"), silent = TRUE)
 
 tryCatch(

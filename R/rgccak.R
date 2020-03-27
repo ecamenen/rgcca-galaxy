@@ -32,7 +32,6 @@
 #' @references Tenenhaus A. and Tenenhaus M., (2011), Regularized Generalized Canonical Correlation Analysis, Psychometrika, Vol. 76, Nr 2, pp 257-284.
 #' @references Schafer J. and Strimmer K., (2005), A shrinkage approach to large-scale covariance matrix estimation and implications for functional genomics. Statist. Appl. Genet. Mol. Biol. 4:32.
 #' @title Internal function for computing the RGCCA parameters (RGCCA block components, outer weight vectors, etc.).
-#' @export rgccak
 #' @importFrom MASS ginv
 #' @importFrom stats cor rnorm
 #' @importFrom graphics plot
@@ -40,7 +39,7 @@
 rgccak=function (A, C, tau = "optimal", scheme = "centroid",verbose = FALSE, init = "svd", bias = TRUE, tol = 1e-08,na.rm=TRUE,estimateNA="no",scale=TRUE,sameBlockWeight=TRUE,initImpute="rand") 
 {
     
-    call=list(A=A, C=C,tau= tau , scheme = scheme,verbose = verbose, init = init, bias = bias, tol = tol,na.rm=na.rm,estimateNA=estimateNA,scale=scale,sameBlockWeight=sameBlockWeight,initImpute=initImpute) 
+    call=list(A=A, C=C, scheme = scheme,verbose = verbose, init = init, bias = bias, tol = tol,na.rm=na.rm,estimateNA=estimateNA,scale=scale,sameBlockWeight=sameBlockWeight,initImpute=initImpute) 
         
      if(mode(scheme) != "function") 
     {
@@ -49,7 +48,17 @@ rgccak=function (A, C, tau = "optimal", scheme = "centroid",verbose = FALSE, ini
     if(scheme=="factorial"){ g <- function(x)  x^2}  
     if(scheme=="centroid"){g <- function(x) abs(x)}
    
-    }else {g<-scheme}
+     }else {g<-scheme}
+    
+    
+    J <- length(A) # nombre de blocs
+    n <- NROW(A[[1]]) # nombre d'individus
+    pjs <- sapply(A, NCOL) # nombre de variables par bloc
+    Y <- matrix(0, n, J)
+    if (!is.numeric(tau)) # cas ou on estime le tau de maniere intelligente (a creuser)
+        tau = sapply(A, tau.estimate) # d apres Schafer and Strimmer
+    
+
     A0 <-A
     A <- lapply(A, as.matrix)
     # Initialisation of missing values
@@ -128,14 +137,7 @@ rgccak=function (A, C, tau = "optimal", scheme = "centroid",verbose = FALSE, ini
         if(sameBlockWeight){stdev=lapply(stdev,function(x){return(x/sqrt(NCOL(x)))})}
         
     }
-    
-    J <- length(A) # nombre de blocs
-    n <- NROW(A[[1]]) # nombre d'individus
-    pjs <- sapply(A, NCOL) # nombre de variables par bloc
-    Y <- matrix(0, n, J)
-    if (!is.numeric(tau)) # cas ou on estime le tau de maniere intelligente (a creuser)
-        tau = sapply(A, tau.estimate) # d apres Schafer and Strimmer
-    a <- alpha <- M <- Minv <- K <- list() # initialisation variables internes
+       a <- alpha <- M <- Minv <- K <- list() # initialisation variables internes
     which.primal <- which((n >= pjs) == 1) # on raisonne differement suivant la taille du bloc
     which.dual <- which((n < pjs) == 1)
     
@@ -439,12 +441,13 @@ rgccak=function (A, C, tau = "optimal", scheme = "centroid",verbose = FALSE, ini
     }
     AVEinner <- sum(C * cor(Y)^2/2)/(sum(C)/2)
 
-	
+     call$tau=tau
+    
     if(estimateNA!="no")
     {
-        result <- list(Y = Y, a = a, crit = crit, AVE_inner = AVEinner, A=A,call=call)
+        result <- list(Y = Y, a = a, crit = crit, AVE_inner = AVEinner, A=A,call=call,tau=tau)
     }
-    else{result <- list(Y = Y, a = a, crit = crit, AVE_inner = AVEinner,call=call)}
+    else{result <- list(Y = Y, a = a, crit = crit, AVE_inner = AVEinner,call=call,tau=tau)}
     
        return(result)
 }

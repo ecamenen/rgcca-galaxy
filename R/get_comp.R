@@ -5,46 +5,36 @@
 #' @param i_block_z An integer giving the index of a list of blocks (another
 #' one, different from the one used in i_block)
 #' @return A matrix containg each selected components and an associated response
-#' @examples
-#' library(RGCCA)
-#' data("Russett")
-#' blocks = list(agriculture = Russett[, seq(3)], industry = Russett[, 4:5],
-#'     politic = Russett[, 6:11] )
-#' rgcca_out = rgcca(blocks)
-#' response = factor( apply(Russett[, 9:11], 1, which.max),
-#'                   labels = colnames(Russett)[9:11] )
-#' get_comp(rgcca_out, as.matrix(response))
-#' response = as.matrix(runif(NROW(blocks[[1]])))
-#' row.names(response) = row.names(blocks[[1]])
-#' get_comp(rgcca_out, response)
-#' @export
+
 get_comp <- function(
-    rgcca,
-    resp = rep(1, NROW(rgcca$Y[[1]])),
+    rgcca_res,
+    resp = rep(1, NROW(rgcca_res$Y[[1]])),
     compx = 1,
     compy = 2,
     compz = NULL,
-    i_block = length(rgcca$Y),
+    i_block = length(rgcca_res$Y),
     i_block_y = i_block,
     i_block_z = i_block,
     predicted = NULL){
     
-    if(!compx%in% 1:NCOL(rgcca$Y[[i_block]])){stop(paste0("compx is higher than the number of components chosen in RGCCA (", NCOL(rgcca$Y[[i_block]]),") in the block ", i_block,". Please use rgcca with the ncomp option to obtain more than compx components, or use compx lower than ",NCOL(rgcca$Y[[i_block]]) ))}
-    if(!compy%in% 1:NCOL(rgcca$Y[[i_block_y]])){stop(paste0("compy is higher than the number of components chosen in RGCCA (", NCOL(rgcca$Y[[i_block_y]]),") in the block ", i_block_y,". Please use rgcca with the ncomp option to obtain more than compy components, or use compy lower than ",NCOL(rgcca$Y[[i_block_y]]) ))}
-    if(!is.null(compz))
-    {
-        if(!compz%in% 1:NCOL(rgcca$Y[[i_block_z]]))
-        {stop(paste("compz is higher than the number of components (", NCOL(rgcca$Y[[i_block_z]]),") in the block ", i_block_z))
-        }
+    stopifnot(is(rgcca_res, "rgcca"))
+    resp <- as.matrix(check_response(resp, rgcca_res$Y))
+
+    for (i in c("i_block", "i_block_y", "i_block_z")) {
+        if (!is.null(get(i)))
+            check_blockx(i, get(i), rgcca_res$call$blocks)
     }
-    
-         df <- data.frame(
-        rgcca$Y[[i_block]][, compx],
-        rgcca$Y[[i_block_y]][, compy],
-        rgcca$Y[[i_block_z]][, compz]
+    check_ncol(rgcca_res$Y, i_block)
+    for (i in c("compx", "compy", "compz")) {
+        if (!is.null(get(i)))
+            check_compx(i, get(i), rgcca_res$call$ncomp, i_block)
+    }
+
+    df <- data.frame(
+        rgcca_res$Y[[i_block]][, compx],
+        rgcca_res$Y[[i_block_y]][, compy],
+        rgcca_res$Y[[i_block_z]][, compz]
     )
-    
-    resp <- as.matrix(resp)
 
     if (!is.null(predicted)) {
         df2 <- predicted[[2]][[i_block]][, c(compx, compy, compz)]
@@ -53,14 +43,14 @@ get_comp <- function(
         df <- rbind(df1, df2)
         resp <- c(rep("obs",NROW(df2)),rep("pred",NROW(df2)))
 
-    } else if (length(unique(as.matrix(resp))) > 1) {
+    } else if (length(unique(resp)) > 1) {
         names <- row.names(resp)
         resp <- apply(as.matrix(resp), 1, as.character)
 
         if (!is.null(names)) {
 
             resp <- as.matrix(resp, row.names = names)
-            name_blocks <- row.names(rgcca$Y[[i_block]])
+            name_blocks <- row.names(rgcca_res$Y[[i_block]])
             diff_column <- setdiff(name_blocks, names)
 
             if (identical(diff_column, name_blocks)) {
@@ -74,13 +64,18 @@ get_comp <- function(
                 } else {
                     names(resp) <- names
                 }
-                resp <- resp[row.names(rgcca$Y[[i_block]])]
+                resp <- resp[row.names(rgcca_res$Y[[i_block]])]
             }
+
         } else {
-            warning("No row names have been found in the group file.")
-            resp <- rep("NA", NROW(df))
+            # warning("No rownames have been found in the group file. The rownames of the selected block of RGCCA have been used.")
+            # resp <- rep("NA", NROW(df))
+            # rownames(resp) <- rownames(rgcca_res$A[[i_block]])
+            if (length(resp) != NROW(rgcca_res$A[[i_block]]))
+                stop("resp argument should have the same size than the number of rows in the selected block.")
         }
-    }
+    } else
+        resp <- resp[seq(NROW(df)), ]
 
     if ((!is.character2(resp) &&
         length(unique(resp)) > 5) || 

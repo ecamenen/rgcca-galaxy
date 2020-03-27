@@ -12,7 +12,15 @@
         <requirement type="package" version="1.6.4">r-optparse</requirement>
         <requirement type="package" version="1.0.0">r-scales</requirement>
         <requirement type="package" version="1.2.4.1">r-igraph</requirement>
+<!--        <requirement type="package" version="4.5.4">r-plotly</requirement>-->
+<!--        <requirement type="package" version="2.0.9">r-visnetwork</requirement>-->
+        <requirement type="package" version="4.1.4">r-openxlsx</requirement>
+        <requirement type="package" version="0.4.5">r-rlang</requirement>
+        <requirement type="package" version="2.5_6">r-vegan</requirement>
         <requirement type="package" version="0.8.1">r-ggrepel</requirement>
+        <requirement type="package" version="4.0">r-deriv</requirement>
+        <requirement type="package" version="1.0.0">r-scales</requirement>
+
     </requirements>
 
     <stdio>
@@ -156,7 +164,7 @@
             </conditional>
 
             <conditional name="tau">
-                <param name="bool" type="boolean" truevalue="optimal" falsevalue="false" checked="true" label="Use an optimal tau"
+                <param name="bool" type="boolean" truevalue="optimal" falsevalue="false" checked="false" label="Use an optimal tau"
                        help="A regularization parameter for each block (i.e., tau) [default: 1]. Tau varies from 0 (maximizing the correlation) to 1 (maximizing the covariance). If a SGCCA method is selected, tau is automatically set to 1. A shrinkage parameter can be defined instead for automatic variable selection, varying from the square root of the variable number (the fewest selected variables) to 1 (all the variables are included)."/>
                 <when value="false">
                     <param name="value" type="float" label=" " value="1" min="0" max="1"/>

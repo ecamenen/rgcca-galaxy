@@ -1,7 +1,9 @@
-print.rgccad <- function(x) 
+print.rgccad <- function(x, ...) 
 {
-  cat("Call: ")
-  dput(x$call)
+
+    cat("Call: ")
+    dput(x$call[!names(x$call)%in%c("A")])
+    
   cat("\n\n")
   
   if(is.list(x$crit))
@@ -19,8 +21,23 @@ print.rgccad <- function(x)
   cat("The design matrix is:\n") 
   colnames(x$call$C) = rownames(x$call$C) = names(x$a) ; print(x$call$C)
   cat("The", x$call$scheme, "scheme was used.", fill = TRUE)
-  for (i in 1:NCOL(x$call$C)) {
-    cat("The shrinkage parameter used for block", i, "was:", 
-          round(x$call$tau[i], 4), fill = TRUE)
+
+ param="regularization"
+
+  if(is.vector(x$tau))
+  {
+      for (i in 1:NCOL(x$call$C)) {
+          cat("The ",param," parameter used for block", i, "was:", 
+              round(x$call$tau[i], 4), fill = TRUE)
+      }
   }
+ 
+  if(is.matrix(x$tau))
+  {
+      
+      cat("The",param,"parameter matrix was:",fill=TRUE)
+      print(round(x$call$tau,4))
+  }
+  
 }
+

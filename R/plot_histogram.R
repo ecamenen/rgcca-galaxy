@@ -4,28 +4,13 @@
 #'
 #' @inheritParams plot2D
 #' @param group A vector of character giving the group for the rows
-#' @param low_col A character giving the color used for the lowest part of
-#' the gradient
-#' @param high_col A character giving the color used for the highest part of
-#' the gradient
-#' @param mid_col A character giving the color used for the middle part of
-#' the gradient
 #' @param cex_axis An integer for the size of the axis text
 #' @param colors reoresenting a vector of colors
-#' @examples
-#' df = data.frame(x = runif(30), order = 30:1)
-#' library("ggplot2")
-#' p = ggplot(df, aes(order, x))
-#' plot_histogram(p, df, "This is my title")
-#' # Add colors per levels of a variable
-#' df$color = rep(c(1,2,3), each=10)
-#' p = ggplot(df, aes(order, x, fill = color))
-#' plot_histogram(p, df, "Histogram", as.character(df$color))
-#' @export
+
 plot_histogram <- function(
     p,
     df,
-    title = "Histogram",
+    title = "",
     group = NA,
     colors = NULL,
     cex = 1,
@@ -34,7 +19,13 @@ plot_histogram <- function(
     cex_axis = 10 * cex
 ) {
 
-    colors <- check_colors(colors)
+    for (i in c("cex", "cex_main", "cex_sub", "cex_axis"))
+        check_integer(i, get(i))
+
+    stopifnot(is(p, "ggplot"))
+    check_colors(colors)
+    title <- paste0(title, collapse = " ")
+    group <- as.vector(group)
 
     if (NROW(df) <= 10 || is(df, "d_ave")) {
         width <- NULL
@@ -76,18 +67,18 @@ plot_histogram <- function(
     )
 
     if  (!is(df, "d_ave")) {
+        p <- p +
+            scale_x_continuous(breaks = df$order, labels = rownames(df)) +
+            labs(fill = "Blocks")
+        if (length(group) == 1){
+            if (is.null(colors))
+                colors <- c(color_group(seq(3))[3],  "gray", color_group(seq(3))[1])
             p <- p +
-                scale_x_continuous(breaks = df$order, labels = rownames(df)) +
-                labs(fill = "Blocks")
-            if (length(group) == 1) {
-                if (is.na(colors[2])) {
-                    p <- p +
-                        scale_fill_gradient(low = colors[1], high = colors[3]) +
-                        theme(legend.position = "none")
-                }else
-                    p <- p +
-                        scale_fill_gradient2(low = colors[1], high = colors[3], mid = colors[2])
-            }
+                scale_fill_gradientn(colors = colors, na.value = "black")
+        } else  if ((is.character2(group[!is.na(group)]) ||
+                            length(unique(group)) <= 5 )) {
+            p <- p + scale_fill_manual(values = color_group(group, colors))
+        }
     }
 
     return(p)

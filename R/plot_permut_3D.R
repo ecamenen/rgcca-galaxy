@@ -5,23 +5,7 @@
 #' @inheritParams plot3D
 #' @inheritParams plot_permut_2D
 #' @param sign A boolean to color by groups of alpha = 0.05, 0.01 or 0.001
-#' @examples
-#' data("Russett")
-#' A = list(agriculture = Russett[, seq(3)], industry = Russett[, 4:5],
-#'     politic = Russett[, 6:11] )
-#' perm <- rgcca_permutation(A, nperm = 2, n_cores = 1)
-#' plot_permut_3D(perm)
-#' perm <- rgcca_permutation(A, p_c1 = TRUE, nperm = 2, n_cores = 1)
-#' plot_permut_3D(perm)
-# c1s <- expand.grid(
-#     lapply(
-#         seq(length(A)),
-#         function(x) seq(1 / sqrt(ncol(A[[x]])), 1, by = 0.1)
-#     )
-# )
-# perm <- rgcca_permutation(A, p_c1 = c1s, nperm = 2, n_cores = 1)
-# plot_permut_3D(perm)
-#' @export
+# @export
 plot_permut_3D <- function(
     perm,
     type = "zstat",
@@ -33,7 +17,16 @@ plot_permut_3D <- function(
     cex_point = 3 * cex,
     cex_lab = 19 * cex) {
 
+    stopifnot(is(perm, "permutation"))
     match.arg(type, c("crit", "zstat"))
+    check_boolean("sign", sign)
+    for (i in c("cex","cex_point", "cex_lab"))
+        check_integer(i, get(i))
+    for (i in c("i_block", "i_block_y", "i_block_z"))
+        check_blockx(i, get(i), perm$penalties[1,])
+
+    load_libraries("plotly")
+    `%>%` <- plotly::`%>%`
 
     switch(
         type,
@@ -54,7 +47,7 @@ plot_permut_3D <- function(
             + as.double(zstat$z > qnorm(1 - 0.01 / 2))
             + as.double(zstat$z > qnorm(1 - 0.001 / 2))
 
-    plotly::plot_ly(
+    p <- plotly::plot_ly(
         zstat,
         x = ~ zstat[, 1],
         y = ~ zstat[, 2],
@@ -73,8 +66,8 @@ plot_permut_3D <- function(
             cmin = 0,
             cmax = max(zstat$z)
         )
-    ) %>% 
-    add_trace(type = "scatter3d", mode = "markers") %>% 
+    )
+    plotly::add_trace(p, type = "scatter3d", mode = "markers") %>% 
     layout3D(
         title = paste0(
             "Permutation scores \n(best value : ",

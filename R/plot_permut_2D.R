@@ -4,6 +4,7 @@
 #' 
 #' @inheritParams plot_var_2D
 #' @param perm A permutation object from a RGCCA analyse
+#' @param bars Among "points", "stderr" or "sd": representation of the variability
 #' @param type An string giving the type of the index to look at (among 'crit' for
 #'  the RGCCA criterion and 'zstat' for the pseudo Z-score)
 #' @param cex general size of the text
@@ -11,15 +12,7 @@
 #' @param cex_sub = 16 * cex, size of the subtitle text 
 #' @param cex_point = 3 * cex, size of the point
 #' @param cex_lab = 19 * cex, size of the labels
-#' @examples
-#' data("Russett")
-#' A = list(agriculture = Russett[, seq(3)], industry = Russett[, 4:5],
-#'     politic = Russett[, 6:11] )
-#' perm <- rgcca_permutation(A, nperm = 2, n_cores = 1)
-#' plot_permut_2D(perm)
-#' perm <- rgcca_permutation(A, p_c1 = TRUE, nperm = 2, n_cores = 1)
-#' plot_permut_2D(perm)
-#' @export
+
 plot_permut_2D <- function(
     perm, 
     type = "zstat",
@@ -28,9 +21,16 @@ plot_permut_2D <- function(
     cex_main = 25 * cex,
     cex_sub = 16 * cex,
     cex_point = 3 * cex,
-    cex_lab = 19 * cex) {
+    cex_lab = 19 * cex,
+    bars="points"
+    ) {
+  
 
-    match.arg(type, c("crit", "zstat"))
+   
+    
+        match.arg(type, c("crit", "zstat"))
+    for (i in c("cex", "cex_main", "cex_sub", "cex_point", "cex_lab"))
+        check_integer(i, get(i))
     
     switch(
         type,
@@ -45,7 +45,7 @@ plot_permut_2D <- function(
     n <- seq(nrow(perm$penalties))
 
     df <- as.data.frame(cbind(seq(NROW(perm$penalties)), y))
-    rownames(df) <- sapply(n, function(x) paste(round(perm$penalties[x, ],2), collapse = ","))
+    rownames(df) <- sapply(n, function(x) paste(round(perm$penalties[x, ],2), collapse = "-"))
     colnames(df) <- c("iter", type)
 
     axis <- function(margin){
@@ -62,6 +62,8 @@ plot_permut_2D <- function(
                 paste(round(perm$penalties[best,], 2), collapse = ", "),
                 ")"
             )
+    else
+        title <- paste0(title, collapse = " ")
 
     p <- ggplot(data = df, mapping = aes(x = df[, 1], y = df[, 2], ymin = 0)) + 
         theme_classic() +
@@ -104,16 +106,32 @@ plot_permut_2D <- function(
             yintercept = c(1.96, 2.58, 3.29)
         )
     else
-        for (i in NCOL(perm$permcrit)) {
-            p <- p + geom_line(
-                aes(
-                    x = df[, 1],
-                    y = perm$permcrit[, i]
-                ),
-                col = "grey",
-                size = 1
-            )
+    {
+        dft=NULL
+        for (i in 1:NCOL(perm$permcrit)) {
+            #print(i)
+            x = df[, 1]
+            y = perm$permcrit[, i]
+            dfi=cbind(x,y)
+            dft=rbind(dft,dfi)
+        }   
+      #  print(dft)
+        dft=as.data.frame(dft)
+     
+        if(bars=="points")
+        {
+            print("point")
+            p<- p+geom_point(data=dft,aes(x=dft[,1],y=dft[,2]),colour="green",size=0.8)
         }
+        if(bars=="sd")
+        {
+            
+        }
+         
+    }
+    p<- p+ scale_x_continuous(breaks=1:nrow(df),  labels=rownames(df))
+    p<-p + theme(axis.text.x = element_text(angle=45))
+       plot(p)
 
     return(p)
 

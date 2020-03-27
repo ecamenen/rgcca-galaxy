@@ -7,28 +7,9 @@
 #' @param type A character for the type of plot : either "ind" for individual plot or "var" for corcircle
 #' @param colors reoresenting a vector of colors
 #' 
-#' @examples
-#' library(RGCCA)
-#' data("Russett")
-#' blocks = list(agriculture = Russett[, seq(3)],
-#'     politic = Russett[, 6:11] )
-#' rgcca_out = rgcca(blocks, ncomp = rep(3, 2))
-#' df = get_comp(rgcca_out, compz = 3)
-#' plot3D(df, rgcca_out, i_block = 2)
-#' plot3D(df, rgcca_out, i_block = 2, text = FALSE)
-#' response = factor( apply(Russett[, 9:11], 1, which.max),
-#'                   labels = colnames(Russett)[9:11] )
-#' response = blocks[[2]][, 1]
-#' names(response) = row.names(blocks[[2]])
-#' df = get_comp(rgcca_out, response, compz = 3)
-#' plot3D(df, rgcca_out, i_block = 2, text = FALSE)
-#' plot3D(df, rgcca_out, i_block = 2)
-#' df = get_ctr2(rgcca_out, compz = 3, i_block = 1, collapse = TRUE)
-#' plot3D(df, rgcca_out, i_block = 2, type = "var")
-#' @export
 plot3D <- function(
     df,
-    rgcca,
+    rgcca_res,
     compx = 1,
     compy = 2,
     compz = 3,
@@ -43,7 +24,28 @@ plot3D <- function(
     cex_point = 3 * cex,
     cex_lab = 19 * cex) {
 
-    colors <- check_colors(colors)
+    stopifnot(is(rgcca_res, "rgcca"))
+    check_boolean("text", text)
+    if (is.null(colors)) {
+        colors <- "#A50026"
+        colors[2] <- NA
+        colors[3] <- "#313695"
+    }else
+        check_colors(colors)
+    title <- paste0(title, collapse = " ")
+    match.arg(type, c("ind", "var"))
+    for (i in c("i_block", "i_block_y", "i_block_z"))
+            check_blockx(i, get(i), rgcca_res$call$blocks)
+    check_ncol(rgcca_res$Y, i_block)
+    for (i in c("compx", "compy", "compz")) {
+        if (!is.null(get(i)))
+            check_compx(i, get(i), rgcca_res$call$ncomp, i_block)
+    }
+    for (i in c("cex", "cex_point", "cex_lab"))
+        check_integer(i, get(i))
+
+    load_libraries("plotly")
+    `%>%` <- plotly::`%>%`
 
     if (is.na(colors[2]) && length(unique(df$resp)) == 1) {
         df$resp <- as.factor(rep("a", length(df$resp)))
@@ -53,11 +55,19 @@ plot3D <- function(
 
     axis <- function(x, i)
         list(
-                title = paste0("<i>", print_comp(rgcca, x, i), "</i>"),
+                title = paste0("<i>", print_comp(rgcca_res, x, i), "</i>"),
                 titlefont = list(
                         size = cex_lab * 0.75
                     )
             )
+
+   if(!is.character2(df$resp)){
+      if (is.null(colors)){
+        colors <- "#A50026"
+        colors[2] <- NA
+        colors[3] <- "#313695"
+      }
+   }
 
     color <- function(x){
         n <- length(x)
@@ -79,7 +89,7 @@ plot3D <- function(
         l <- levels(df$resp)
 
         func <- quote(
-            add_trace(
+            plotly::add_trace(
                 p,
                 name = l[x],
                 x = ~ subdf(x)[, 1],
@@ -110,7 +120,6 @@ plot3D <- function(
         eval(func)
     }
 
-
     if (!is.character2(df$resp)) {
 
         if (text)
@@ -118,7 +127,7 @@ plot3D <- function(
         else
             visible <- TRUE
 
-        p <- plot_ly(
+        p <- plotly::plot_ly(
             name = "samples",
             x = ~ df[, 1],
             y = ~ df[, 2],
@@ -134,7 +143,7 @@ plot3D <- function(
 
         if (text) {
             p <- p %>%
-                add_trace(
+              plotly::add_trace(
                     name = "samples",
                     x = ~ df[, 1],
                     y = ~ df[, 2],
@@ -152,14 +161,14 @@ plot3D <- function(
         }
 
     }else{
-        p <- plot_ly()
+        p <- plotly::plot_ly()
         
         for (i in seq(length(levels(df$resp))))
             p <- p %>% add_trace_manual(i)
     }
 
     p <- p %>%
-        layout(
+      plotly::layout(
             autosize = TRUE,
             margin = list(
                 l = 50,
@@ -184,7 +193,7 @@ plot3D <- function(
 
     plot_circle3D <- function(p, x, y, z){
         df <- cbind(plot_circle(), 0)
-        add_trace(
+        plotly::add_trace(
             p = p,
             x = df[, x],
             y = df[, y],

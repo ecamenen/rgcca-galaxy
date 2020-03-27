@@ -1,35 +1,39 @@
+#' plot.naEvolution
+#' 
 #'Plots the impact of increasing missing data on RGCCA
-#' @param listFinale A list resulting of naEvolution
+#' @param x A list resulting of naEvolution (\link{naEvolution})
 #' @param output ="rv": Can be also "a" for correlations between axes, "bm" for the percent of similar biomarkers, "rvComplete" if the RV is calculated only on complete dataset, or "rmse" for Root Mean Squares Error.
-#' @param fileName =NULL name of the file where the plot is saved
 #' @param ylim =c(0.8,1) y limits
 #' @param block ="all" or a number indicating the position of the chosen block in the initial list
-#' @param barType ="sd" or "stderr". Indicates which error bar to build
-#' @param namePlot =NULL Name of the file
-#' @param width =480 width of the saved file
-#' @param height =480 height of the saved file
+#' @param bars ="sd" or "stderr". Indicates which error bar to build
+#' @param main =NULL Title of the graph (before the block name)
 #' @param names.arg  renaming the methods
-#' @param main title of the graphic
+#' @param ... Further plot parameters...
 #' @examples 
 #' set.seed(42);X1=matrix(rnorm(350),70,5);X2=matrix(rnorm(280),70,4)
 #' colnames(X1)=paste("A",1:5)
 #' colnames(X2)=paste("B",1:4)
 #' rownames(X1)=rownames(X2)=paste("S",1:70)
 #' A=list(X1,X2)
-#' listResults=naEvolution(A=A,prctNA=c(0.1,0.2,0.3,0.4),
+#' listResults=naEvolution(blocks=A,prctNA=c(0.1,0.2,0.3,0.4),
 #' listMethods=c("mean","complete","nipals","knn4"))
-#' plotEvol(listFinale=listResults,ylim=c(0,1),output="a")
+#' plot(x=listResults,ylim=c(0,1),output="a")
 #' @importFrom grDevices graphics.off
 #' @export
-plotEvol=function(listFinale,output="rv",fileName=NULL,ylim=NULL,block="all",barType="sd",namePlot=NULL,width=480,height=480,names.arg=NULL,main=NULL)
+plot.naEvolution=function(x,output="rv",ylim=NULL,block="all",bars="sd",main=NULL,names.arg=NULL,...)
 { #output : "rv", "pct" ou "a"
-  #barType="sd" or "stdErr"
+  #bars="sd" or "stderr"
   #  graphics.off()
-  if(is.null(namePlot)){namePlot=output}
-  if(!is.null(fileName)){png(paste(fileName,".png",sep=""),width=width,height=height)}
-  nameData= names(listFinale)
+  if(is.null(main)){main=output}
+    if(block!="all")
+    {
+        check_integer("block",block)
+    }
+    match.arg(bars,c("sd","stderr"))
+    match.arg(output,c("rv","rvComplete","bm","rmse","a"))
+  nameData= names(x)
   abscisse=as.numeric(nameData)
-  J=length(listFinale[[1]][[1]][[1]][[1]]) #nblock
+  J=length(x[[1]][[1]][[1]][[1]]) #nblock
   if(block=="all"&&J<5)
   {  
     #  close.screen(all.screens = TRUE) ;
@@ -41,7 +45,7 @@ plotEvol=function(listFinale,output="rv",fileName=NULL,ylim=NULL,block="all",bar
   {
       toPlot=block:block
   }
-  namesMethod=as.character(names(listFinale[[1]][[1]]))
+  namesMethod=as.character(names(x[[1]][[1]]))
   #colMethod=rainbow(5)[1:length(namesMethod)]
   colMethod=c("cornflowerblue","chocolate1","chartreuse3","red","blueviolet","darkturquoise","darkgoldenrod1","coral","bisque4","darkorchid1","deepskyblue1")[1:length(namesMethod)]
   nMeth=0:length(namesMethod)
@@ -62,12 +66,12 @@ plotEvol=function(listFinale,output="rv",fileName=NULL,ylim=NULL,block="all",bar
       for(rg in namesMethod)
       {  
       
-        result=sapply(listFinale[[da]],function(x){return(x[[rg]][[output]][j])})
+        result=sapply(x[[da]],function(x){return(x[[rg]][[output]][j])})
       
         moyenne[[j]][da,rg]=mean(result)
-        if(!barType %in% c("sd","stderr")){ecartType[[j]][da,rg]=0}
-        if(barType=="sd"){ecartType[[j]][da,rg]=sd(result)}
-        if(barType=="stderr"){ecartType[[j]][da,rg]=sd(result)/sqrt(length(result))}
+        if(!bars %in% c("sd","stderr")){ecartType[[j]][da,rg]=0}
+        if(bars=="sd"){ecartType[[j]][da,rg]=sd(result)}
+        if(bars=="stderr"){ecartType[[j]][da,rg]=sd(result)/sqrt(length(result))}
         if(length(toPlot)>1)
         {
             ymin[j]=min(ymin[j],min(moyenne[[j]][da,rg]-ecartType[[j]][da,rg]))
@@ -100,9 +104,9 @@ plotEvol=function(listFinale,output="rv",fileName=NULL,ylim=NULL,block="all",bar
     par(las=1)
     par(mar=c(5, 4, 4, 2) + 0.1)
     par(mgp=c(3,1,0))
-    if(is.null(main)){title=paste(namePlot,": Block",j)}else{title=main}
+    if(is.null(main)){title=paste(main,": Block",j)}else{title=main}
     par(mar=c(3,3,1,1))
-    plot(NULL,main=title,xlim=c(0,length(abscisse)),ylim=Ylim,xlab="Proportion of missing values",ylab="",bty="n",xaxt="n")
+    plot(NULL,main=title,xlim=c(0,length(abscisse)),ylim=Ylim,xlab="Proportion of missing values",ylab="",bty="n",xaxt="n",...)
     axis(side = 1,col="grey",line=0,at=-0.5+1:length(abscisse),labels=abscisse)
     axis(side = 2,col="grey",line=0)
     rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col = 
@@ -140,7 +144,6 @@ plotEvol=function(listFinale,output="rv",fileName=NULL,ylim=NULL,block="all",bar
     legend("topleft",legend=leg,fill=colMethod,box.lwd=0,bty="n")
   }
 par(mfrow=c(1,1))
-  if(!is.null(fileName)){dev.off()}
-  
+
 }
 

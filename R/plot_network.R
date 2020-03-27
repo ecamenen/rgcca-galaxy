@@ -1,10 +1,10 @@
 #' Plot the connection between blocks
 #' 
 #' @inheritParams plot_ind
+#' @param colors colors of the network
 #' @return A dataframe with tuples of connected blocks
 #' @examples
 #' library(igraph)
-#' library(RGCCA)
 #' data("Russett")
 #' blocks = list(agriculture = Russett[, seq(3)], industry = Russett[, 4:5],
 #'     politic = Russett[, 6:11] )
@@ -12,30 +12,34 @@
 #' plot_network(rgcca_out)
 #' @export
 plot_network <- function(
-    rgcca, 
+    rgcca_res, 
     title = paste0("Common rows between blocks : ",
-                   NROW(rgcca$call$blocks[[1]]))) {
+                   NROW(rgcca_res$call$blocks[[1]])),
+    colors =  "#eee685") {
+
+    stopifnot(is(rgcca_res, "rgcca"))
+    title <- paste0(title, collapse = " ")
+    check_colors(colors)
+
+    load_libraries("igraph")
 
     # Avoid random
     set.seed(1)
+    `V<-` <- igraph::`V<-`
+    `E<-` <- igraph::`E<-`
     V <- E <- NULL
         
-    nodes <- get_nodes(rgcca)
-    edges <- get_edges(rgcca)
+    nodes <- get_nodes(rgcca_res)
+    edges <- get_edges(rgcca_res)
 
     par <- ifelse("sparsity" %in% names(nodes), "sparsity", "tau")
 
-    net <- graph_from_data_frame(
+    net <- igraph::graph_from_data_frame(
         d = edges,
         vertices = nodes,
         directed = FALSE)
 
-    if (all(is.na(nodes[, par]))) {
-        nodes[, par] <- rep("optimal", length(rgcca$call$blocks))
-        V(net)$call$tau <- rep(1, length(rgcca$call$blocks))
-    }
-
-    V(net)$color <- "khaki2"
+    V(net)$color <- as.vector(colors[1])
     V(net)$label <- paste(
         nodes$id,
         "\nP =",
@@ -58,7 +62,5 @@ plot_network <- function(
         vertex.label.degree = 1.5,
         vertex.size = 23,
         main = title
-   
     )
-
 }

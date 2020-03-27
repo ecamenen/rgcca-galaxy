@@ -260,7 +260,7 @@ check_arg <- function(opt) {
 
     if (is.null(opt$datasets))
         stop(paste0("datasets is required."), exit_code = 121)
-    
+
     if (is.null(opt$scheme))
         opt$scheme <- "factorial"
     else if (!opt$scheme %in% seq(4)) {
@@ -327,6 +327,9 @@ post_check_arg <- function(opt, rgcca) {
         }
     }
 
+    if (opt$ncomp == 1)
+        opt$compy <- 1
+
     for (x in c("compx", "compy"))
         opt[[x]] <- check_compx(x, opt[[x]], rgcca$call$ncomp, opt$block)
 
@@ -372,17 +375,17 @@ check_integer <- function(x, y = x, type = "scalar", float = FALSE, min = 1) {
     return(y)
 }
 
-
 load_libraries <- function(librairies) {
     for (l in librairies) {
         if (!(l %in% installed.packages()[, "Package"]))
-            utils::install.packages(l, repos = "http://cran.us.r-project.org")
-        library(
-            l,
-            character.only = TRUE,
-            warn.conflicts = FALSE,
-            quietly = TRUE
-        )
+            utils::install.packages(l, repos = "cran.us.r-project.org")
+        suppressPackageStartupMessages(
+            library(
+                l,
+                character.only = TRUE,
+                warn.conflicts = FALSE,
+                quietly = TRUE
+        ))
     }
 }
 
@@ -395,7 +398,7 @@ opt <- list(
     separator = "\t",
     type = "rgcca",
     ncomp = 2,
-    tau = "optimal",
+    tau = 1,
     scheme = "factorial",
     init = 1,
     block = 0,
@@ -416,7 +419,8 @@ opt <- list(
         collapse = ",")
 )
 
-load_libraries(c("RGCCA", "ggplot2", "optparse", "scales", "igraph", "ggrepel", "MASS"))
+load_libraries(c("ggplot2", "optparse", "scales", "igraph", "MASS", "openxlsx", "rlang", "Deriv"))
+try(load_libraries("ggrepel"), silent = TRUE)
 
 tryCatch(
     opt <- check_arg(parse_args(getArgs())),
@@ -440,105 +444,95 @@ opt$superblock <- !("superblock" %in% names(opt))
 opt$scale <- !("scale" %in% names(opt))
 opt$text <- !("text" %in% names(opt))
 
-blocks <- load_blocks(opt$datasets, opt$names, opt$separator)
-group <- load_response(blocks, opt$group, opt$separator, opt$header)
-connection <- load_connection(file = opt$connection, sep = opt$separator)
+status <- 0
+tryCatch({
 
-rgcca_out <- rgcca(
-    blocks = blocks,
-    connection = connection,
-    response = opt$response,
-    superblock = opt$superblock,
-    tau = opt$tau,
-    ncomp = opt$ncomp,
-    scheme = opt$scheme,
-    scale = opt$scale,
-    type = opt$type
-)
+    blocks <- load_blocks(opt$datasets, opt$names, opt$separator)
+    group <- load_response(blocks, opt$group, opt$separator, opt$header)
+    connection <- load_connection(file = opt$connection, separator = opt$separator)
 
-opt <- post_check_arg(opt, rgcca_out)
-
-########## Plot ##########
-
-if (rgcca_out$call$ncomp[opt$block] == 1 && is.null(opt$block_y)) {
-    warning("With a number of component of 1, a second block should be chosen to perform an individual plot")
-} else {
-    (
-        individual_plot <- plot_ind(
-            rgcca_out,
-            group,
-            opt$compx,
-            opt$compy,
-            opt$block,
-            opt$text,
-            opt$block_y,
-            get_filename(opt$group)
+    func <- quote(
+        rgcca(
+            blocks = blocks,
+            connection = connection,
+            response = opt$response,
+            superblock = opt$superblock,
+            ncomp = opt$ncomp,
+            scheme = opt$scheme,
+            scale = opt$scale,
+            type = opt$type
         )
     )
-    save_plot(opt$o1, individual_plot)
-}
-
-if (rgcca_out$call$ncomp[opt$block] > 1) {
-    (
-        corcircle <- plot_var_2D(
+    if (tolower(opt$type) %in% c("sgcca", "spca", "spls")) {
+        func[["sparsity"]] <- opt$tau
+    }else {
+        func[["tau"]] <- opt$tau
+    }
+    
+    rgcca_out <- eval(as.call(func))
+    
+    opt <- post_check_arg(opt, rgcca_out)
+    
+    ########## Plot ##########
+    
+    if (rgcca_out$call$ncomp[opt$block] == 1 && is.null(opt$block_y)) {
+        warning("With a number of component of 1, a second block should be chosen to perform an individual plot")
+    } else {
+        (
+            individual_plot <- plot_ind(
+                rgcca_out,
+                group,
+                opt$compx,
+                opt$compy,
+                opt$block,
+                opt$text,
+                opt$block_y,
+                get_filename(opt$group)
+            )
+        )
+        save_plot(opt$o1, individual_plot)
+    }
+    
+    if (rgcca_out$call$ncomp[opt$block] > 1) {
+        (
+            corcircle <- plot_var_2D(
+                rgcca_out,
+                opt$compx,
+                opt$compy,
+                opt$block,
+                opt$text,
+                n_mark = opt$nmark
+            )
+        )
+        save_plot(opt$o2, corcircle)
+    }
+    
+    top_variables <- plot_var_1D(
             rgcca_out,
             opt$compx,
-            opt$compy,
+            opt$nmark,
             opt$block,
-            opt$text,
-            n_mark = opt$nmark
+            type = "cor"
         )
-    )
-    save_plot(opt$o2, corcircle)
-}
+    save_plot(opt$o3, top_variables)
 
-top_variables <- plot_var_1D(
-        rgcca_out,
-        opt$compx,
-        opt$nmark,
-        opt$block,
-        type = "cor"
-    )
-save_plot(opt$o3, top_variables)
-
-# Average Variance Explained
-(ave <- plot_ave(rgcca_out))
-save_plot(opt$o4, ave)
-
-# Creates design scheme
-design <- function() plot_network(rgcca_out)
-save_plot(opt$o5, design)
-
-save_ind(rgcca_out, opt$compx, opt$compy, opt$o6)
-save_var(rgcca_out, opt$compx, opt$compy, opt$o7)
-
-if (!is.null(opt$response)) {
-    crossval <- rgcca_crossvalidation(rgcca_out)
-    cat(paste("Cross-validation score (leave-one-out) :", crossval$scores))
-    plot_ind(rgcca_out, predicted = crossval)
-}
-
-# Bootstrap
-boot <- bootstrap(rgcca_out, n_boot = 5)
-selected.var <- get_bootstrap(rgcca_out, boot, opt$compx, opt$block)
-plot_bootstrap_2D(selected.var)
-plot_bootstrap_1D(selected.var)
-
-# Permutation
-
-if (length(blocks) > 1) {
-    perm <- rgcca_permutation(
-        blocks,
-        connection = connection,
-        response = opt$response, 
-        superblock = opt$superblock,
-        tau = opt$tau,
-        ncomp = opt$ncomp,
-        scheme = opt$scheme,
-        scale = opt$scale,
-        type = opt$type, 
-        nperm = 5)
-    plot_permut_2D(perm)
-}
-
-save(rgcca_out, file = opt$o8)
+    # Average Variance Explained
+    (ave <- plot_ave(rgcca_out))
+    save_plot(opt$o4, ave)
+    
+    # Creates design scheme
+    design <- function() plot_network(rgcca_out)
+    save_plot(opt$o5, design)
+    
+    save_ind(rgcca_out, opt$compx, opt$compy, opt$o6)
+    save_var(rgcca_out, opt$compx, opt$compy, opt$o7)
+    save(rgcca_out, file = opt$o8)
+    
+    }, error = function(e){
+        if (class(e)[1] %in% c("simpleError", "error", "condition" ))
+            status <<- 1
+        else
+            status <<- class(e)[1]
+        message(e$message)
+})
+quit(status = status)
