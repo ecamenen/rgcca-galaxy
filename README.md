@@ -20,7 +20,7 @@ Performs multi-variate analysis (PCA, CCA, PLS, R/SGCCA, etc.) and produces text
 
 ## Description
 
-We consider J data matrices X1 ,..., XJ. Each n × pj data matrix Xj = [ xj1, ..., xjpj ] is called a block and represents a set of pj variables observed on n individuals. The number and the nature of the variables may differ from one block to another, but the individuals must be the same across blocks. We assume that all variables are centered. The objective of RGCCA is to find, for each block, a weighted composite of variables (called block component) yj = Xj . aj, j = 1 ,..., J (where aj is a column-vector with pj elements) summarizing the relevant information between and within the blocks. The block components are obtained such that (i) block components explain well their own block and/or (ii) block components that are assumed to be connected are highly correlated. In addition, RGCCA integrates a variable selection procedure, called SGCCA, allowing the identification of the most relevant features (see [here](https://github.com/BrainAndSpineInstitute/rgcca_Rpackage/blob/master/README.md#rsgcca-from-the-cran-vignette-3) for more information).
+We consider J data matrices X1 ,..., XJ. Each n × pj data matrix Xj = [ xj1, ..., xjpj ] is called a block and represents a set of pj variables observed on n individuals. The number and the nature of the variables may differ from one block to another, but the individuals must be the same across blocks. We assume that all variables are centered. The objective of RGCCA is to find, for each block, a weighted composite of variables (called block component) yj = Xj . aj, j = 1 ,..., J (where aj is a column-vector with pj elements) summarizing the relevant information between and within the blocks. The block components are obtained such that (i) block components explain well their own block and/or (ii) block components that are assumed to be connected are highly correlated. In addition, RGCCA integrates a variable selection procedure, called SGCCA, allowing the identification of the most relevant features (see [here](https://github.com/rgcca-factory/RGCCA/tree/release/3.0.0#algorithm) for more information).
 
 
 ## Setting up (not for Windows)
@@ -36,8 +36,8 @@ source ./miniconda3/bin/activate
 ### Package installation
 
 ```
-PACKAGE_NAME=rgcca_galaxy
-git clone https://github.com/BrainAndSpineInstitute/${PACKAGE_NAME}.git
+PACKAGE_NAME=RGCCA
+git clone https://github.com/rgcca-factory/${PACKAGE_NAME}.git
 cd ${PACKAGE_NAME}
 conda create -n ${PACKAGE_NAME} -c conda-forge -c bioconda -c icm-iconics planemo
 ```
@@ -54,7 +54,7 @@ planemo serve [wait, then go to the link]
 
 In the tool-shed (left panel), select the « RGCCA » tool (Fig. 1). 
 
-Download the pre-formatted files [here](https://github.com/BrainAndSpineInstitute/rgcca_Rpackage/tree/master/inst/extdata). This folder includes three blocks with the same individuals (corresponding to the countries here) but different types of variables (agriculture, industry and politic). In this dataset, according to Russett (1964), a high agriculture inequality and a low industrial development lead to unstable political regime. 
+Download the pre-formatted files [here](https://github.com/rgcca-factory/RGCCA/tree/release/3.0.0/inst/extdata). This folder includes three blocks with the same individuals (corresponding to the countries here) but different types of variables (agriculture, industry and politic). In this dataset, according to Russett (1964), a high agriculture inequality and a low industrial development lead to unstable political regime. 
 
 Download them in Galaxy (with the download button in green, **Fig. 1**). The accepted format is one (for PCA) or multiple CSV files containing a matrix with:
 - quantitative values only, with decimals separated by '.' and missing values labelled as "NA"
@@ -201,35 +201,35 @@ By executing the analysis (blue button at the bottom), four images, two tabular 
 - "N" is the number of lines (here, each block has the same number of line)
 - "tau" is the shrinkage parameter and "sparsity" is the sparsity coefficient (see the [3.4.1 & 3.4.2 sections](https://github.com/BrainAndSpineInstitute/rgcca_galaxy/tree/master#34-other-rsgcca-parameters). The tau parameter could be shown for each component if the optimal option is selected
 
-![Fig 9](https://raw.githubusercontent.com/BrainAndSpineInstitute/rgcca_Rpackage/master/img/design.png)
+![Fig 9](https://raw.githubusercontent.com/rgcca-factory/RGCCA/release/3.0.0/img/design.png)
 
 *Fig. 9 : Connection between each block of the RGCCA and the superblock with 47 common rows between blocks*
 
 ### 5.2. Average variance explained (AVE)
 In ```ave.pdf``` the average variance explained (AVE; in X-axis) is represented in percent for each block (in Y-axis) and each component (one color per component) (**Fig. 10**). The subtitle informs about the AVE for the two first of the outer model (weighted average of the AVE of each block).
 
-![Fig 10](https://raw.githubusercontent.com/BrainAndSpineInstitute/rgcca_Rpackage/master/img/ave.png)
+![Fig 10](https://raw.githubusercontent.com/rgcca-factory/RGCCA/release/3.0.0/img/ave.png)
 
 *Fig. 10 : Average variance variance explained (in %) for each block and for the two first components of the RGCCA*
 
 ### 5.3. Samples
 ```individual.pdf``` is the projection of the sample coordinates in the selected component of the analysis and, by default, on the superblock (a concatenation of all the blocks) (**Fig. 11**). If a ```response``` file is loaded, each sample is colored according to this variable. In the Russet example, the X-axis could discriminate a dictatorship (with upper values on this axis than the two other political systems), whereas the Y axis discriminates an unstable democracy (with upper values than the others).
 
-![Fig 11](https://raw.githubusercontent.com/BrainAndSpineInstitute/rgcca_Rpackage/master/img/individuals.png)
+![Fig 11](https://raw.githubusercontent.com/rgcca-factory/RGCCA/release/3.0.0/img/individuals.png)
 
 *Fig. 11 : Samples coordinates on the two first components for the superblock of the RGCCA by loading the " political_system.tsv" file.*
 
 ### 5.4. Corcircle
 ```corcircle.pdf``` corresponds to the Pearson correlation between the variables of the block and the selected components in the analysis (by default, on the two first components) (**Fig. 12**). The circle is a 1 correlation and the dotted one is a 0.5 correlation. If the superblock is selected, colors correspond to the belonging of each variable to each block. Only the 100th variables the most correlated to each axis are printed.
 
-![Fig 12](https://raw.githubusercontent.com/BrainAndSpineInstitute/rgcca_Rpackage/master/img/corcircle.png)
+![Fig 12](https://raw.githubusercontent.com/rgcca-factory/RGCCA/release/3.0.0/img/corcircle.png)
 
 *Fig. 12 : Correlation between each variable of each block (by using the superblock) and the two first components of RGCCA*
 
 ### 5.5. Top variables
 ```top_variables``` also represents the same correlation of the variable with the selected component (on the X-axis; 1 by default). The top variables are sorted decreasingly (on the Y-axis) in a histogram among the selected block (superblock, by default) (**Fig. 13**). Their number is set by the graphical associated parameter.
 
-![Fig 13](https://raw.githubusercontent.com/BrainAndSpineInstitute/rgcca_Rpackage/master/img/top_variables.png)
+![Fig 13](https://raw.githubusercontent.com/rgcca-factory/RGCCA/release/3.0.0/img/top_variables.png)
 
 *Fig. 13 : Top 11 variables among all the blocks (by using the superblock) with higher correlation with the first component of the RGCCA. "Gnpr" (belonging to the industry block) shows a correlation of 0.859 with this component.*
 

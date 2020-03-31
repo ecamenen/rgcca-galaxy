@@ -44,9 +44,9 @@
             $analyse.superblock
             $analyse.scale
             #if $analyse.tau.bool == 'false'
-            --tau $analyse.tau.value
+            --penalty $analyse.tau.value
             #else
-            --tau $analyse.tau.bool
+            --penalty $analyse.tau.bool
             #end if
             --ncomp $analyse.ncomp
             --scheme $analyse.scheme
@@ -165,7 +165,7 @@
 
             <conditional name="tau">
                 <param name="bool" type="boolean" truevalue="optimal" falsevalue="false" checked="false" label="Use an optimal tau"
-                       help="A regularization parameter for each block (i.e., tau) [default: 1]. Tau varies from 0 (maximizing the correlation) to 1 (maximizing the covariance). If a SGCCA method is selected, tau is automatically set to 1. A shrinkage parameter can be defined instead for automatic variable selection, varying from the square root of the variable number (the fewest selected variables) to 1 (all the variables are included)."/>
+                       help="For RGCCA, a regularization parameter for each block (i.e., tau) [default: 1]. Tau varies from 0 (maximizing the correlation) to 1 (maximizing the covariance). For SGCCA, tau is automatically set to 1 and a shrinkage parameter can be defined instead for automatic variable selection, varying from the square root of the variable number (the fewest selected variables) to 1 (all the variables are included)."/>
                 <when value="false">
                     <param name="value" type="float" label=" " value="1" min="0" max="1"/>
                 </when>
@@ -337,14 +337,14 @@ A user-friendly multi-blocks analysis (Regularized Generalized Canonical Correla
 
 **Working example**
 
-    | From Russett data (RGCCA package): https://github.com/BrainAndSpineInstitute/rgcca_Rpackage/tree/master/inst/extdata
+    | From Russett data (RGCCA package): https://github.com/rgcca-factory/RGCCA/tree/release/3.0.0/inst/extdata
     | Use *agriculture.tsv* as a block. Add *industry.tsv* and *politic.tsv* as new blocks. *connection.tsv* could be used as a design matrix and *political_system.tsv* as a response variable respectively in analysis and graphic settings.
 
 **Documentation**
 
 - RGCCA: https://cran.r-project.org/web/packages/RGCCA/vignettes/vignette_RGCCA.pdf
-- accepted input / output formats: https://github.com/BrainAndSpineInstitute/rgcca_Rpackage#input-files
-- tutorial: https://github.com/BrainAndSpineInstitute/rgcca_galaxy/blob/master/README.md
+- accepted input / output formats: https://github.com/rgcca-factory/RGCCA/tree/release/3.0.0#input-files
+- tutorial: https://github.com/BrainAndSpineInstitute/rgcca_galaxy/blob/release/0.2/README.md
 
 </help>
 
