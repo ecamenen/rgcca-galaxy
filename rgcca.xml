@@ -7,19 +7,7 @@
     </macros>
 
     <requirements>
-<!--        <requirement type="package" version="3.0.0">r-rgcca</requirement>-->
-        <requirement type="package" version="3.2.1">r-ggplot2</requirement>
-        <requirement type="package" version="1.6.4">r-optparse</requirement>
-        <requirement type="package" version="1.0.0">r-scales</requirement>
-        <requirement type="package" version="1.2.4.1">r-igraph</requirement>
-<!--        <requirement type="package" version="4.5.4">r-plotly</requirement>-->
-<!--        <requirement type="package" version="2.0.9">r-visnetwork</requirement>-->
-        <requirement type="package" version="4.1.4">r-openxlsx</requirement>
-        <requirement type="package" version="0.4.5">r-rlang</requirement>
-        <requirement type="package" version="2.5_6">r-vegan</requirement>
-        <requirement type="package" version="0.8.1">r-ggrepel</requirement>
-        <requirement type="package" version="4.0">r-deriv</requirement>
-        <requirement type="package" version="1.0.0">r-scales</requirement>
+        <requirement type="package" version="3.0.0">rgccacmd</requirement>
 
     </requirements>
 
