@@ -434,8 +434,9 @@ tryCatch(
 # Load functions
 setwd(opt$directory)
 
-for (f in list.files("R/"))
-        source(paste0("R/", f))
+all_funcs <- unclass(lsf.str(envir = asNamespace("RGCCA"), all = T))
+for(i in all_funcs) 
+    eval(parse(text=paste0(i, '<-RGCCA:::', i)))
 
 # Set missing parameters by default
 opt$header <- !("header" %in% names(opt))
