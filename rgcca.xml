@@ -334,14 +334,14 @@ A user-friendly multi-blocks analysis (Regularized Generalized Canonical Correla
 
 **Working example**
 
-    | From Russett data (RGCCA package): https://github.com/rgcca-factory/RGCCA/tree/release/3.0.0/inst/extdata
+    | From Russett data (RGCCA package): https://github.com/rgcca-factory/RGCCA/tree/master/inst/extdata
     | Use *agriculture.tsv* as a block. Add *industry.tsv* and *politic.tsv* as new blocks. *connection.tsv* could be used as a design matrix and *political_system.tsv* as a response variable respectively in analysis and graphic settings.
 
 **Documentation**
 
 - RGCCA: https://cran.r-project.org/web/packages/RGCCA/vignettes/vignette_RGCCA.pdf
-- accepted input / output formats: https://github.com/rgcca-factory/RGCCA/tree/release/3.0.0#input-files
-- tutorial: https://github.com/BrainAndSpineInstitute/rgcca_galaxy/blob/release/0.2/README.md
+- accepted input / output formats: https://github.com/rgcca-factory/RGCCA#input-files
+<!-- - tutorial: https://github.com/BrainAndSpineInstitute/rgcca_galaxy/blob/release/0.2/README.md-->
 
 </help>
 
