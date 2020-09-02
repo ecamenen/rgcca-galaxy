@@ -61,13 +61,13 @@ Download them in Galaxy (with the download button in green, **Fig. 1**). The acc
 - samples in rows, labelled in the 1rst column with the same sample names between blocks (some samples could be missing in some blocks)
 - variables in columns, labelled in the 1rst line without duplications in variable names between blocks
 
-![Fig 1](img/toolShed.png)
+![Fig 1](static/images/toolShed.png)
 
 *Fig. 1 : Tool-shed of Galaxy with the "RGCCA" emplacement*
 
 The structure of the dataset should be seen in the history panel (**Fig. 2**).
 
-![Fig 2](img/history.png) 
+![Fig 2](static/images/history.png) 
 
 *Fig. 2. History of Galaxy after downloading the three blocks from Russett data*
 
@@ -75,7 +75,7 @@ The block could be then used in the "RGCCA" tool (**Fig. 3**).
 Use ```agriculture.tsv``` as dataset. Click on "Insert New dataset" to make new panels appear and to add 
 ```industry.tsv``` and ```politic.tsv``` as new dataset.
 
-![Fig 3](img/tool.png) 
+![Fig 3](static/images/tool.png) 
 
 *Fig. 3. Graphical interface in Galaxy of "RGCCA". By default, an only parameter is required : an input file to analyze. Another dataset could be added for a multi-bloc analyze (in red).*
 
@@ -88,7 +88,7 @@ All the files should be delimited by the same type of separator (tabulation, by 
 Change the separator to another one (e.g.,```semicolon```) to observe an error notification after executing the tool: 
 > "politic block file has only one column. Check the separator."
 
-![Fig 4](img/advParse.png) 
+![Fig 4](static/images/advParse.png) 
 
 *Fig. 4. The panel of parsing settings should appear after clicking on the "eye" icon*
 
@@ -98,7 +98,7 @@ Change the separator to another one (e.g.,```semicolon```) to observe an error n
 
 The analyse parameters are all set by default (**Fig. 5**) and the user could directly click on the ```Execute``` button. To directly visualize the outputs, see the [last section](https://github.com/BrainAndSpineInstitute/rgcca_galaxy/tree/master#5-visualize-the-plot).
 
-![Fig 5](img/advAn.png) 
+![Fig 5](static/images/advAn.png) 
 
 *Fig. 5 : The second parameter panel shows various options to customize the analysis: choose the analysis and the number of components, scale the blocks, choose a shrinkage, use the superblock or a supervised approach, choose a link function.*
 
@@ -120,7 +120,7 @@ This parameters are only used only with R/SGCCA.
 
 The downloaded folder contains a design matrix (```connection.tsv```; **Fig. 6**) corresponding to the relationship between each block: 1 if two blocks are connected and 0 otherwise. The expected format should be tabulation-separated and do not have column and row names. It is a symmetric matrix with the same dimension as the number of blocks. This file allows to add *a priori* information of correlation hypothesis between the blocks. It will not be taken in account with a superblock (see next section). After disabling the ```use a superblock``` option, load this file into the ```Connection design``` file box and observe the result on the plots. The ```connection.tsv``` file contains 1 in all non-diagonal cells and makes the assumption that all the blocks are related.
 
-![Fig 6](img/connection.png)
+![Fig 6](static/images/connection.png)
 
 *Fig. 6. Supplementary files that could be used to customize the connection between the blocks in the analysis.*
 
@@ -154,7 +154,7 @@ Only, the horst scheme penalizes structural negative correlation. The factorial 
 ## 4. Customize the graphics
 
 
-![Fig 7](img/advGraph.png) 
+![Fig 7](static/images/advGraph.png) 
 
 *Fig. 7 : The graphical option panel includes: (i) the loading of groups of response to color the samples (ii) the possibility to hide/print the names of the variables, (iii) the components used in the plots and (iv) the selection of the block to visualize. In this example, the superblock will be selected as the block for the X- and Y-axis.*
 
@@ -164,7 +164,7 @@ A variable could be used to color the points according to a response. For this, 
 - samples in lines, labelled in the 1rst column with the same sample names as the blocks (some samples could be missing)
 - a header containing the names of the columns
 
-![Fig 8](img/response.png)
+![Fig 8](static/images/response.png)
 
 *Fig. 8. Supplementary files that could be used to visualize the group of a response in the samples plot.*
 
