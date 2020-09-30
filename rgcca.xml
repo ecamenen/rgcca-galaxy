@@ -70,11 +70,11 @@
     ]]></command>
 
     <inputs>
-        <param name="block_1" type="data" format="tsv,tabular,txt,csv" label="Load a block"
-            help="CSV file containing a matrix with: (i) quantitative values only (decimal should be separated by '.'), (ii) the samples in lines (should be labelled in the 1rst column) and (iii) variables in columns (should have a header)."/>
+        <param name="block_1" type="data" format="tsv" label="Load a block"
+            help="TSV file containing a matrix with: (i) quantitative values only (decimal should be separated by '.'), (ii) the samples in lines (should be labelled in the 1rst column) and (iii) variables in columns (should have a header)."/>
         <repeat name="dataset" title="New block"
             help="Additional block with a different structure than the first one. Each block will be analysed separately.">
-            <param name="block_n" type="data" format="tsv,tabular,txt,csv" label="Dataset"/>
+            <param name="block_n" type="data" format="tsv" label="Dataset"/>
         </repeat>
 
         <section name="parse" title="Advanced parsing" help="By default, on tabulated files with a header.">
@@ -144,7 +144,7 @@
                     label="Load the design matrix (if superblock or supervised disabled)"/>
                 <when value="true">
                     <param name="file" type="data" format="tsv" label=" "
-                        help="CSV file without header and without row names. This file describes the connections between the blocks. It should contain 1 (if two blocks are related) or 0 values otherwise. The columns are separated by tabulations. It is a symmetric matrix with the same dimension as the number of blocks."/>
+                        help="TSV file without header and without row names. This file describes the connections between the blocks. It should contain 1 (if two blocks are related) or 0 values otherwise. The columns are separated by tabulations. It is a symmetric matrix with the same dimension as the number of blocks."/>
                 </when>
                 <when value="false"/>
             </conditional>
@@ -184,8 +184,8 @@ negative correlation. The factorial scheme discriminates more strongly the block
             <conditional name="response">
                 <param name="bool" type="boolean" label="Color the individual plot with a response variable"/>
                 <when value="true">
-                    <param name="file" type="data" format="tsv,tabular,txt,csv" label=" "
-                        help="A CSV file containing either: (i) an only column with a qualitative or a quantitative variable; (ii) multiple columns corresponding to a disjunctive table."/>
+                    <param name="file" type="data" format="tsv" label=" "
+                        help="A TSV file containing either: (i) an only column with a qualitative or a quantitative variable; (ii) multiple columns corresponding to a disjunctive table."/>
                 </when>
                 <when value="false"/>
             </conditional>
