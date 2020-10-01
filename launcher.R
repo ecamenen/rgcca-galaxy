@@ -477,7 +477,7 @@ tryCatch({
                 opt$block,
                 opt$text,
                 opt$block_y,
-                get_filename(opt$group)
+                "Response"
             )
         )
         save_plot(opt$o1, individual_plot)
@@ -526,4 +526,3 @@ tryCatch({
         message(e$message)
 })
 quit(status = status)
-
