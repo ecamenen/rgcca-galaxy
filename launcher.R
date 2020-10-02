@@ -415,12 +415,12 @@ load_libraries(c("ggplot2", "optparse", "scales", "igraph", "MASS", "rlang", "De
 try(load_libraries("ggrepel"), silent = TRUE)
 
 tryCatch(
-    opt <- check_arg(parse_args(get_args())),
+    opt <- check_arg(optparse::parse_args(get_args())),
     error = function(e) {
-    if (length(grep("nextArg", e[[1]])) != 1)
-            stop(e[[1]], exit_code = 140)
+        if (length(grep("nextArg", e[[1]])) != 1)
+            stop_rgcca(e[[1]], exit_code = 140)
     }, warning = function(w)
-        stop(w[[1]], exit_code = 141)
+        stop_rgcca(w[[1]], exit_code = 141)
 )
 
 # Load functions
