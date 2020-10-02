@@ -56,7 +56,7 @@ In the tool-shed (left panel), select the « RGCCA » tool (**Fig. 1**).
 
 Download the pre-formatted files [here](https://github.com/rgcca-factory/RGCCA/tree/master/inst/extdata). This folder includes three blocks with the same individuals (corresponding to the countries here) but different types of variables (agriculture, industry and politic). In this dataset, according to Russett (1964), a high agriculture inequality and a low industrial development lead to unstable political regime. 
 
-Download them in Galaxy (with the download button in green, **Fig. 1**). The accepted format is one (for PCA) or multiple TSV (tabulation as a column separator) files containing a matrix with:
+Download them in Galaxy (with the download button in green, **Fig. 1**). The accepted format is one (for PCA) or multiple files containing a matrix with:
 - quantitative values only, with decimals separated by '.' and missing values labelled as "NA"
 - samples in rows, labelled in the 1rst column with the same sample names between blocks (some samples could be missing in some blocks)
 - variables in columns, labelled in the 1rst line without duplications in variable names between blocks
@@ -83,7 +83,7 @@ Click on ```Insert New block``` to make new panels appear and to add
 ## 2. Custom the analysis
 
 
-The analyse parameters are all set by default (**Fig. 4**) and the user could directly click on the ```Execute``` button. To directly visualize the outputs, see the [last section](https://github.com/BrainAndSpineInstitute/rgcca_galaxy/tree/master#4-visualize-the-plot). These parameters could also be customized  by clicking on the "eye" icon.
+The analyse parameters are all set by default (**Fig. 4**) and the user could directly click on the ```Execute``` button. To directly visualize the outputs, see the [last section](#4-visualize-the-plot). These parameters could also be customized  by clicking on the "eye" icon.
 
 ![Fig 4](static/images/advAn.png) 
 
@@ -105,7 +105,7 @@ This parameters are to be only used only with R/SGCCA.
 
 #### 2.3.1. Loading a connection file
 
-The downloaded folder contains a design matrix (```connection.tsv```; **Fig. 5**) corresponding to the relationship between each block: 1 if two blocks are connected and 0 otherwise. The expected format should be tabulation-separated and should not have column and row names. It is a symmetric matrix with the same dimension as the number of blocks. This file allows to add *a priori* information of correlation hypothesis between the blocks. It will not be taken in account with a superblock (see next section). After disabling the ```use a superblock``` option, ```load the design matrix``` and observe the result on the plots. The ```connection.tsv``` file contains 1 in all non-diagonal cells and makes the assumption that all the blocks are related.
+The downloaded folder contains a design matrix (```connection.tsv```; **Fig. 5**) corresponding to the relationship between each block: 1 if two blocks are connected and 0 otherwise. The file should not have column and row names. It is a symmetric matrix with the same dimension as the number of blocks. It allows to add *a priori* information of correlation hypothesis between the blocks. It will not be taken in account with a superblock (see next section). After disabling the ```use a superblock``` option, ```load the design matrix``` and observe the result on the plots. The ```connection.tsv``` file contains 1 in all non-diagonal cells and makes the assumption that all the blocks are related.
 
 ![Fig 5](static/images/connection.png)
 
@@ -146,7 +146,7 @@ Only, the horst scheme penalizes structural negative correlation. The factorial 
 *Fig. 6 : The graphical option panel includes: (i) the loading of groups of response to color the samples (ii) the possibility to hide/print the names of the variables, (iii) the components used in the plots and (iv) the selection of the block to visualize. In this example, the superblock will be selected as the block for the X- and Y-axis.*
 
 ### 3.1. Color the samples
-A variable could be used to color the points according to a response. For this, load the ``` political_system.tsv``` file (**Fig. 7**) in the corresponding ```Color the individual plot[...]``` box to update the plot. The expected format is a TSV file tabulation-separated with: 
+A variable could be used to color the points according to a response. For this, load the ``` political_system.tsv``` file (**Fig. 7**) in the corresponding ```color the individual plot[...]``` box to update the plot. The expected format is : 
 - qualitative or quantitative values (decimals separated by '.') with missing values labelled as "NA"
 - samples in lines, labelled in the 1rst column with the same sample names as the blocks (some samples could be missing)
 - a header containing the names of the columns
@@ -162,7 +162,7 @@ If activated (by default), the ```display names``` option shows the name of the 
 The ```component``` of the analysis allows to choose the space where the points are visualised. For the "top variable" histogram, the component is set by ```component for the x-axis```. For biplots tabs, either ```component for the x-axis``` or ```component for the y-axis``` could be set. By default, they are respectively set to the first and the second components. Their choices are limited by the number of components selected in the analysis (defined in the 2.1. section). If the number of components in RGCCA were greater than two (not allowed in the Russet example, because of the industry block), the ```component for the x-axis```, for example, could be set to the third one.
 
 ### 3.4. Block (for the x/y-axis)
-By default, plots are shown with the ```superblock``` (i.e., the concatenation of all blocs; see [section 2.3.2](https://github.com/BrainAndSpineInstitute/rgcca_galaxy/tree/master#232-superblock)) to visualize all the blocs together. If this option is disabled, by default, the last blocks in the drop-down menu ```block``` is used (option ```0```). Choose another block (e.g., ```1``` for agriculture) to update the plots with your selection. For the ```individual``` plot, a ```block for the y-axis``` could also be selected.
+By default, plots are shown with the ```superblock``` (i.e., the concatenation of all blocs; see [section 2.3.2](#232-superblock)) to visualize all the blocs together. If this option is disabled, by default, the last blocks in the drop-down menu ```block``` is used (option ```0```). Choose another block (e.g., ```1``` for agriculture) to update the plots with your selection. For the ```individual``` plot, a ```block for the y-axis``` could also be selected.
 
 ### 3.5. Number of top variables
 Used only in the  the "top variable" histogram, the maximum ```number of top variables``` is *a posteriori* automatically set to the number of variables in the selected blocks. For example, with Russet data, eleven "top" variables could be visualised by default on the superblock.
@@ -183,10 +183,10 @@ By executing the analysis (blue button at the bottom), four images, two tabular 
 
 
 ### 4.1. Connection between blocks
-```design.pdf``` summarizes the connection between each block: a link corresponds to a "1" value, in the matrix connection file (**Fig. 8**; see [section 2.3.1.](https://github.com/BrainAndSpineInstitute/rgcca_galaxy/tree/master#231-loading-a-connection-file)). For each block:
+```design.pdf``` summarizes the connection between each block: a link corresponds to a "1" value, in the matrix connection file (**Fig. 8**; see [section 2.3.1.](#231-loading-a-connection-file)). For each block:
 - "P" is the number of variables
 - "N" is the number of lines (here, each block has the same number of line)
-- "tau" is the shrinkage parameter and "sparsity" is the sparsity coefficient (see the [2.4.1 & 2.4.2 sections](https://github.com/BrainAndSpineInstitute/rgcca_galaxy/tree/master#24-other-rsgcca-parameters). The tau parameter could be shown for each component if the optimal option is selected
+- "tau" is the shrinkage parameter and "sparsity" is the sparsity coefficient (see the [2.4.1 & 2.4.2 sections](#24-other-rsgcca-parameters). The tau parameter could be shown for each component if the optimal option is selected
 
 ![Fig 8](https://raw.githubusercontent.com/rgcca-factory/RGCCA/master/img/design.png)
 

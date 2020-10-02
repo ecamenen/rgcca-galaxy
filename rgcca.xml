@@ -67,11 +67,11 @@
     ]]></command>
 
     <inputs>
-        <param name="block_1" type="data" format="tsv" label="Load a block"
-            help="TSV file containing a matrix with: (i) quantitative values only (decimal should be separated by '.'), (ii) the samples in lines (should be labelled in the 1rst column) and (iii) variables in columns (should have a header)."/>
+        <param name="block_1" type="data" format="tsv,tabular,txt,csv" label="Load a block"
+            help="CSV file containing a matrix with: (i) quantitative values only (decimal should be separated by '.'), (ii) the samples in lines (should be labelled in the 1rst column) and (iii) variables in columns (should have a header)."/>
         <repeat name="dataset" title="New block"
             help="Additional block with a different structure than the first one. Each block will be analysed separately.">
-            <param name="block_n" type="data" format="tsv" label="Dataset"/>
+            <param name="block_n" type="data" format="tsv,tabular,txt,csv" label="Dataset"/>
         </repeat>
 
         <section name="analyse" title="Advanced analysis"
@@ -128,8 +128,8 @@
 
             </conditional>
 
-            <param name="connection" optional="true" type="data" format="tsv" label="Load the design matrix (if superblock or supervised disabled)"
-                help="TSV file without header and without row names. This file describes the connections between the blocks. It should contain 1 (if two blocks are related) or 0 values otherwise. The columns are separated by tabulations. It is a symmetric matrix with the same dimension as the number of blocks."/>
+            <param name="connection" optional="true" type="data" format="tsv,tabular,txt,csv" label="Load the design matrix (if superblock or supervised disabled)"
+                help="CSV file without header and without row names. This file describes the connections between the blocks. It should contain 1 (if two blocks are related) or 0 values otherwise. The columns are separated by tabulations. It is a symmetric matrix with the same dimension as the number of blocks."/>
 
             <param name="superblock" type="boolean" truevalue="" falsevalue="--superblock" checked="true" label="Use a superblock"
                 help="A block defined as the concatenation of all the other blocks. The space spanned by global components is viewed as a compromise space that integrated all the modalities and facilitates the visualization of the results and their interpretation. If disabled, all blocks are assumed to be connected or a connection file could be used."/>
@@ -166,8 +166,8 @@ negative correlation. The factorial scheme discriminates more strongly the block
         </section>
 
         <section name="graphic" title="Advanced graphic" help="By default, the x-axis and y-axis are respectively the first and the second components, the number of top variables is 100 and a superblock is used.">
-            <param name="response" optional="true" type="data" format="tsv" label="Color the individual plot with a response variable"
-                help="A TSV file containing either: (i) an only column with a qualitative or a quantitative variable; (ii) multiple columns corresponding to a disjunctive table."/>
+            <param name="response" optional="true" type="data" format="tsv,tabular,txt,csv" label="Color the individual plot with a response variable"
+                help="A CSV file containing either: (i) an only column with a qualitative or a quantitative variable; (ii) multiple columns corresponding to a disjunctive table."/>
             <param name="text" type="boolean" truevalue="" falsevalue="--text" checked="true" label="Display the names of the points (in biplots)"/>
             <param name="compx" type="integer" label="Component for the X-axis" help="The component used in the X-axis for biplots and the only component used for top variable plot. @COMP_RULES@" value="1" min="1" max="5"/>
             <param name="compy" type="integer" label="Component for the Y-axis" help="The component used in the Y-axis for biplots. @COMP_RULES@" value="2" min="1" max="5"/>
@@ -321,7 +321,7 @@ A user-friendly multi-blocks analysis (Regularized Generalized Canonical Correla
 
 - RGCCA: https://cran.r-project.org/web/packages/RGCCA/vignettes/vignette_RGCCA.pdf
 - accepted input / output formats: https://github.com/rgcca-factory/RGCCA#input-files
-<!-- - tutorial: https://github.com/BrainAndSpineInstitute/rgcca_galaxy/blob/release/0.2/README.md-->
+- tutorial: https://github.com/BrainAndSpineInstitute/rgcca_galaxy#tutorial-rgcca-galaxy-tool
 
 </help>
 
