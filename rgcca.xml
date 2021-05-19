@@ -21,12 +21,12 @@
     </requirements>
 
     <command detect_errors="exit_code"><![CDATA[
-        #set data_paths = ",".join([_.file_name for _ in $blocks])
-        #set data_names = ",".join([_.name for _ in $blocks])
+        #set data_paths = ",".join([str(_.file_name) for _ in $blocks])
+        #set data_names = ",".join([str(_.element_identifier).replace(',', '_') for _ in $blocks])
         Rscript '$__tool_directory__/launcher.R'
             --datasets '${data_paths}'
             --names '${data_names}'
-            --o1 '$individual_plot' --o2 '$corcircle' --o3 '$top_variables' --o4 '$ave' --o5 '$design' --o6 '$individual_table' --o7 '$variable_table' --o8 '$r_results'
+            --o1 '$individual_plot' --o2 '$corcircle' --o3 '$top_variables' --o4 '$ave' --o5 '$design' --o6 '$individual_table' --o7 '$variable_table' --o8 '$rdata'
             $parse.header
             --separator $parse.separator
             $analyse.superblock
@@ -62,7 +62,7 @@
 
     <inputs>
         <param name="blocks" type="data" format="tsv,tabular,txt,csv" multiple="true" optional="false" label = "Load blocks"
-               help="TSV file containing a matrix with: (i) quantitative values only (decimal should be separated by '.'), (ii) the samples in lines (should be labelled in the 1rst column) and (iii) variables in columns (should have a header)."/>
+            help="TSV file containing a matrix with: (i) quantitative values only (decimal should be separated by '.'), (ii) the samples in lines (should be labelled in the 1rst column) and (iii) variables in columns (should have a header)."/>
 
         <section name="parse" title="Advanced parsing" help="By default, on tabulated files with a header.">
             <param name="header" type="boolean" truevalue="" falsevalue="-H" checked="true" label="Consider the first row as header of columns" help="Used for both blocks and color files."/>
@@ -73,13 +73,13 @@
         </section>
 
         <section name="analyse" title="Advanced analysis"
-                 help="By default, the analysis: is a Regularised Generalised Canonical Correlation Analysis, scales the blocks, uses a superblock with a factorial scheme function, a tau equals to one and two components for each block.">
+            help="By default, the analysis: is a Regularised Generalised Canonical Correlation Analysis, scales the blocks, uses a superblock with a factorial scheme function, a tau equals to one and two components for each block.">
 
             <param name="ncomp" type="integer" label="Number of component" value="2" min="2" max="5"
-                   help="The number of component to use in the analysis for each block (should not be greater than the minimum number of variable among the blocks)."/>
+                help="The number of component to use in the analysis for each block (should not be greater than the minimum number of variable among the blocks)."/>
 
             <param name="scale" type="boolean" truevalue="" falsevalue="--scale" checked="true" label="Scale the blocks"
-                   help="A data centering step is always performed. If activated, each block is normalised and divided by the square root of its number of variables."/>
+                help="A data centering step is always performed. If activated, each block is normalised and divided by the square root of its number of variables."/>
 
             <conditional name="method">
 
@@ -127,10 +127,10 @@
             </conditional>
 
             <param name="connection" optional="true" type="data" format="tsv,tabular,txt,csv" label="Load the design matrix (if superblock or supervised disabled)"
-                   help="TSV file without header and without row names. This file describes the connections between the blocks. It should contain 1 (if two blocks are related) or 0 values otherwise. The columns are separated by tabulations. It is a symmetric matrix with the same dimension as the number of blocks."/>
+                help="TSV file without header and without row names. This file describes the connections between the blocks. It should contain 1 (if two blocks are related) or 0 values otherwise. The columns are separated by tabulations. It is a symmetric matrix with the same dimension as the number of blocks."/>
 
             <param name="superblock" type="boolean" truevalue="" falsevalue="--superblock" checked="true" label="Use a superblock"
-                   help="A block defined as the concatenation of all the other blocks. The space spanned by global components is viewed as a compromise space that integrated all the modalities and facilitates the visualization of the results and their interpretation. If disabled, all blocks are assumed to be connected or a connection file could be used."/>
+                help="A block defined as the concatenation of all the other blocks. The space spanned by global components is viewed as a compromise space that integrated all the modalities and facilitates the visualization of the results and their interpretation. If disabled, all blocks are assumed to be connected or a connection file could be used."/>
 
             <conditional name="supervised">
                 <param name="learning_mode" type="select" display="radio" label="Learning mode">
@@ -145,7 +145,7 @@
 
             <conditional name="tau">
                 <param name="bool" type="select" display="radio" label="Tau selection"
-                       help="For RGCCA, a regularization parameter for each block (i.e., tau) [default: 1]. Tau varies from 0 (maximizing the correlation) to 1 (maximizing the covariance). For SGCCA, tau is automatically set to 1 and a shrinkage parameter can be defined instead for automatic variable selection, varying from the square root of the variable number (the fewest selected variables) to 1 (all the variables are included).">
+                    help="For RGCCA, a regularization parameter for each block (i.e., tau) [default: 1]. Tau varies from 0 (maximizing the correlation) to 1 (maximizing the covariance). For SGCCA, tau is automatically set to 1 and a shrinkage parameter can be defined instead for automatic variable selection, varying from the square root of the variable number (the fewest selected variables) to 1 (all the variables are included).">
                     <option value="false">Manual</option>
                     <option value="optimal">Optimal</option>
                 </param>
@@ -168,7 +168,7 @@ negative correlation. The factorial scheme discriminates more strongly the block
 
         <section name="graphic" title="Advanced graphic" help="By default, the x-axis and y-axis are respectively the first and the second components, the number of top variables is 100 and a superblock is used.">
             <param name="response" optional="true" type="data" format="tsv,tabular,txt,csv" label="Color the individual plot with a response variable"
-                   help="A TSV file containing either: (i) an only column with a qualitative or a quantitative variable; (ii) multiple columns corresponding to a disjunctive table."/>
+                help="A TSV file containing either: (i) an only column with a qualitative or a quantitative variable; (ii) multiple columns corresponding to a disjunctive table."/>
             <param name="text" type="boolean" truevalue="" falsevalue="--text" checked="true" label="Display the names of the points (in biplots)"/>
             <param name="compx" type="integer" label="Component for the X-axis" help="The component used in the X-axis for biplots and the only component used for top variable plot. @COMP_RULES@" value="1" min="1" max="5"/>
             <param name="compy" type="integer" label="Component for the Y-axis" help="The component used in the Y-axis for biplots. @COMP_RULES@" value="2" min="1" max="5"/>
@@ -177,17 +177,43 @@ negative correlation. The factorial scheme discriminates more strongly the block
             <param name="nmark" type="integer" label="Number of top variables" value="100" min="10" max="300"/>
         </section>
 
+        <param name="output_selector" type="select" multiple="true" label="Outputs">
+            <option value="individuals" selected="true">Individual plot</option>
+            <option value="corcircle" selected = "true">Corcircle plot</option>
+            <option value="top_variables">Top variables plot</option>
+            <option value="ave">Averages plot</option>
+            <option value="design">Design plot</option>
+            <option value="individual_table" selected="true">Individual table</option>
+            <option value="variable_table" selected="true">Variable table</option>
+            <option value="rdata">RData file</option>
+        </param>
     </inputs>
 
     <outputs>
-        <data name="individual_plot" label="${tool.name} on ${on_string}: individuals.pdf" format="pdf"/>
-        <data name="corcircle" label="${tool.name} on ${on_string}: corcircle.pdf" format="pdf"/>
-        <data name="top_variables"  label="${tool.name} on ${on_string}: top_variables.pdf" format="pdf"/>
-        <data name="ave"  label="${tool.name} on ${on_string}: ave.pdf" format="pdf"/>
-        <data name="design"  label="${tool.name} on ${on_string}: design.pdf" format="pdf"/>
-        <data name="individual_table"  label="${tool.name} on ${on_string}: individuals.tsv" format="tsv"/>
-        <data name="variable_table"  label="${tool.name} on ${on_string}: variables.tsv" format="tsv"/>
-        <data name="r_results"  label="${tool.name} on ${on_string}: rgcca.result.RData" format="rdata"/>
+        <data name="individual_plot" label="${tool.name} on ${on_string}: individuals.pdf" format="pdf">
+            <filter>"individuals" in output_selector</filter>
+        </data>
+        <data name="corcircle" label="${tool.name} on ${on_string}: corcircle.pdf" format="pdf">
+            <filter>"corcircle" in output_selector</filter>
+        </data>
+        <data name="top_variables"  label="${tool.name} on ${on_string}: top_variables.pdf" format="pdf">
+            <filter>"top_variables" in output_selector</filter>
+        </data>
+        <data name="ave"  label="${tool.name} on ${on_string}: ave.pdf" format="pdf">
+            <filter>"ave" in output_selector</filter>
+        </data>
+        <data name="design"  label="${tool.name} on ${on_string}: design.pdf" format="pdf">
+            <filter>"design" in output_selector</filter>
+        </data>
+        <data name="individual_table"  label="${tool.name} on ${on_string}: individuals.tsv" format="tsv">
+            <filter>"individual_table" in output_selector</filter>
+        </data>
+        <data name="variable_table"  label="${tool.name} on ${on_string}: variables.tsv" format="tsv">
+            <filter>"variable_table" in output_selector</filter>
+        </data>
+        <data name="rdata"  label="${tool.name} on ${on_string}: rgcca.result.RData" format="rdata">
+            <filter>"rdata" in output_selector</filter>
+        </data>
     </outputs>
 
     <tests>
@@ -286,44 +312,44 @@ negative correlation. The factorial scheme discriminates more strongly the block
         </test>
 
     </tests>
-    <help>
+<help>
 
-        ==================================
-        ABOUT
-        ==================================
-
-
-        **Author:**
-        Etienne CAMENEN
+==================================
+ABOUT
+==================================
 
 
-        **Contact:**
-        arthur.tenenhaus@centralesupelec.fr
+**Author:**
+Etienne CAMENEN
 
 
-        **R package:**
-        The RGCCA package is available from the CRAN repository (https://cran.r-project.org/web/packages/RGCCA).
+**Contact:**
+arthur.tenenhaus@centralesupelec.fr
 
-        ---------------------------------------------------
 
-        ==================================
-        R/SGCCA
-        ==================================
+**R package:**
+The RGCCA package is available from the CRAN repository (https://cran.r-project.org/web/packages/RGCCA).
 
-        A user-friendly multi-blocks analysis (Regularized Generalized Canonical Correlation Analysis, RGCCA) as described in [1] and [2] with all default settings predefined. The software produces figures to explore the analysis' results: individuals and variables projected on two components of the multi-block analysis, list of top variables and explained variance in the model.
+---------------------------------------------------
 
-        **Working example**
+==================================
+R/SGCCA
+==================================
 
-        | From Russett data (RGCCA package): https://github.com/rgcca-factory/RGCCA/tree/master/inst/extdata
-        | Use *agriculture.tsv* as a block. Add *industry.tsv* and *politic.tsv* as new blocks. *connection.tsv* could be used as a design matrix and *political_system.tsv* as a response variable respectively in analysis and graphic settings.
+A user-friendly multi-blocks analysis (Regularized Generalized Canonical Correlation Analysis, RGCCA) as described in [1] and [2] with all default settings predefined. The software produces figures to explore the analysis' results: individuals and variables projected on two components of the multi-block analysis, list of top variables and explained variance in the model.
 
-        **Documentation**
+**Working example**
 
-        - RGCCA: https://cran.r-project.org/web/packages/RGCCA/vignettes/vignette_RGCCA.pdf
-        - accepted input / output formats: https://github.com/rgcca-factory/RGCCA#input-files
-        <!-- - tutorial: https://github.com/BrainAndSpineInstitute/rgcca_galaxy/blob/release/0.2/README.md-->
+    | From Russett data (RGCCA package): https://github.com/rgcca-factory/RGCCA/tree/master/inst/extdata
+    | Use *agriculture.tsv* as a block. Add *industry.tsv* and *politic.tsv* as new blocks. *connection.tsv* could be used as a design matrix and *political_system.tsv* as a response variable respectively in analysis and graphic settings.
 
-    </help>
+**Documentation**
+
+- RGCCA: https://cran.r-project.org/web/packages/RGCCA/vignettes/vignette_RGCCA.pdf
+- accepted input / output formats: https://github.com/rgcca-factory/RGCCA#input-files
+<!-- - tutorial: https://github.com/BrainAndSpineInstitute/rgcca_galaxy/blob/release/0.2/README.md-->
+
+</help>
 
     <citations>
         <citation type="doi">10.1007/s11336-017-9573-x</citation>
