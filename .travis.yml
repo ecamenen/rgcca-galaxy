@@ -3,10 +3,10 @@ dist: xenial
 
 env:
   global:
-    - 'TOOL_VERSION=3.0.0'
-    - 'TOOL_NAME=RGCCA'
-    - 'PKGS=libxml2-dev libcurl4-openssl-dev libssl-dev liblapack-dev r-base'
-    - 'RPKGS=parallel pbapply grDevices ggplot2 optparse scales igraph gridExtra Deriv openxlsx devtools rmarkdown pander ggrepel plotly visNetwork'
+    - TOOL_VERSION=3.0.0
+    - TOOL_NAME=RGCCA
+    - PKGS='libxml2-dev libcurl4-openssl-dev libssl-dev liblapack-dev r-base'
+    - RPKGS='parallel pbapply grDevices ggplot2 optparse scales igraph gridExtra Deriv openxlsx devtools rmarkdown pander ggrepel plotly visNetwork'
 
 before_install:
   - sudo apt-get install -y python-virtualenv
