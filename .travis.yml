@@ -1,6 +1,12 @@
 language: python
 dist: xenial
 
+env:
+  - 'TOOL_VERSION=3.0.0'
+  - 'TOOL_NAME=RGCCA'
+  - 'PKGS=libxml2-dev libcurl4-openssl-dev libssl-dev liblapack-dev r-base'
+  - 'RPKGS=parallel pbapply grDevices ggplot2 optparse scales igraph gridExtra Deriv openxlsx devtools rmarkdown pander ggrepel plotly visNetwork'
+
 before_install:
   - sudo apt-get install -y python-virtualenv
   - virtualenv planemo-venv
@@ -10,16 +16,16 @@ before_install:
 
 install:
   - planemo conda_install ${TRAVIS_BUILD_DIR}
-  - sudo apt-get install r-base libxml2-dev libcurl4-openssl-dev libssl-dev liblapack-dev
+  - sudo apt-get install -y ${PKGS}
   - sudo chmod 777 -R /usr/local/lib/R/site-library
-  - Rscript -e 'install.packages(c("parallel", "pbapply", "grDevices", "ggplot2", "optparse", "scales", "igraph", "gridExtra", "Deriv", "openxlsx", "devtools", "rmarkdown", "pander", "ggrepel", "plotly", "visNetwork"), repos = "http://cran.us.r-project.org")' && \
-  - R -e 'devtools::install_github("rgcca-factory/RGCCA", ref = "3.0.0")'
+  - Rscript -e 'install.packages(commandArgs(TRUE),repos = "http://cran.us.r-project.org")' ${RPKGS}
+  - R -e 'devtools::install_github("rgcca-factory/'${TOOL_NAME}'", ref = "'${TOOL_VERSION}'")'
   - git clone --depth 1 --single-branch --branch https://github.com/rgcca-factory/RGCCA.git
-  - cd ${TRAVIS_BUILD_DIR}/RGCCA
-  - git checkout 3.0.0
+  - cd ${TRAVIS_BUILD_DIR}/${TOOL_NAME}
+  - git checkout ${TOOL_VERSION}
   - cd ${TRAVIS_BUILD_DIR}
   # - cp -r ${TRAVIS_BUILD_DIR}/RGCCA/R ${TRAVIS_BUILD_DIR}/R
-  - mv ${TRAVIS_BUILD_DIR}/RGCCA/inst/launcher.R ${TRAVIS_BUILD_DIR}/launcher.R
+  - mv ${TRAVIS_BUILD_DIR}/${TOOL_NAME}/inst/launcher.R ${TRAVIS_BUILD_DIR}/launcher.R
 
 script:
   - planemo lint ${TRAVIS_BUILD_DIR}
