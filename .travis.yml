@@ -24,6 +24,8 @@ install:
   - conda activate test
   - conda install r-base r-gridextra r-deriv r-mass r-ggplot2 r-optparse r-scales r-igraph r-pbapply r-plotly
   - cp -R ${TRAVIS_BUILD_DIR}/. ${CONDA_PREFIX}/
+  - planemo conda_init
+  - planemo conda_install ${CONDA_PREFIX}
   - git clone --depth 1 --single-branch --branch $TOOL_VERSION https://github.com/rgcca-factory/$TOOL_NAME ${CONDA_PREFIX}/${TOOL_NAME}
   - cd ${CONDA_PREFIX}/${TOOL_NAME}
   - git checkout ${TOOL_VERSION}
