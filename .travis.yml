@@ -23,6 +23,7 @@ before_install:
 install:
   - conda activate test
   - conda install r-base r-gridextra r-deriv r-mass r-ggplot2 r-optparse r-scales r-igraph r-pbapply r-plotly
+  - cp -R ${TRAVIS_BUILD_DIR}/. ${CONDA_PREFIX}/
   - git clone --depth 1 --single-branch --branch $TOOL_VERSION https://github.com/rgcca-factory/$TOOL_NAME ${CONDA_PREFIX}/${TOOL_NAME}
   - cd ${CONDA_PREFIX}/${TOOL_NAME}
   - git checkout ${TOOL_VERSION}
@@ -30,12 +31,10 @@ install:
   - R CMD build --no-build-vignettes ${TOOL_NAME}
   - R -e "install.packages('"${TOOL_NAME}_${TOOL_VERSION}".tar.gz'"", repos = NULL, type = 'source')"
   - mv ${CONDA_PREFIX}/${TOOL_NAME}/inst/launcher.R ${CONDA_PREFIX}/launcher.R
-  - ls ${TRAVIS_BUILD_DIR}
-  - cp -R ${TRAVIS_BUILD_DIR}/. ${CONDA_PREFIX}/
 
 script:
   - planemo lint ${CONDA_PREFIX}
-  - planemo test --conda_debug --no_cache_galaxy --galaxy_branch release_18.05 --file_path ${CONDA_PREFIX} --job_output_files ${CONDA_PREFIX} ${CONDA_PREFIX}
+  - planemo test --no_cache_galaxy --galaxy_branch release_18.05 --file_path ${CONDA_PREFIX} --job_output_files ${CONDA_PREFIX} ${CONDA_PREFIX}
 
 after_script:
   - ls ${CONDA_PREFIX}
