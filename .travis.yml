@@ -13,7 +13,7 @@ install:
 
 script:
   - planemo lint ${TRAVIS_BUILD_DIR}
-  - planemo test --conda_debug --no_cache_galaxy --file_path ${TRAVIS_BUILD_DIR} --job_output_files ${TRAVIS_BUILD_DIR} ${TRAVIS_BUILD_DIR}
+  - planemo test --conda_debug --no_cache_galaxy --galaxy_branch release_17.05 --file_path ${TRAVIS_BUILD_DIR} --job_output_files ${TRAVIS_BUILD_DIR} ${TRAVIS_BUILD_DIR}
 
 after_script:
   - ls ${TRAVIS_BUILD_DIR}
