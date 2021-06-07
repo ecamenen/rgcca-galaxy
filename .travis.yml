@@ -2,7 +2,7 @@ language: python
 dist: xenial
 
 before_install:
-  - sudo apt-get install -y python-virtualenv
+  - sudo apt-get install -y python-virtualenv git
   - virtualenv planemo-venv
   - . planemo-venv/bin/activate
   - pip install planemo==0.58.1
@@ -10,6 +10,12 @@ before_install:
 
 install:
   - planemo conda_install ${TRAVIS_BUILD_DIR}
+  - git clone https://github.com/rgcca-factory/RGCCA.git
+  - cd ${TRAVIS_BUILD_DIR}/RGCCA
+  - git checkout 3.0.0
+  - cd ${TRAVIS_BUILD_DIR}
+  - cp -r ${TRAVIS_BUILD_DIR}/RGCCA/R ${TRAVIS_BUILD_DIR}/R
+  - mv ${TRAVIS_BUILD_DIR}/RGCCA/inst/launcher.R ${TRAVIS_BUILD_DIR}/launcher.R
 
 script:
   - planemo lint ${TRAVIS_BUILD_DIR}
