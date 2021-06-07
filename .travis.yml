@@ -16,13 +16,12 @@ install:
   - sudo apt-get install -y libxml2-dev libcurl4-openssl-dev libssl-dev liblapack-dev r-base
   - sudo chmod 777 -R /usr/local/lib/R/site-library
   - Rscript -e 'install.packages(c("parallel", "pbapply", "grDevices", "ggplot2", "optparse", "scales", "igraph", "gridExtra", "Deriv", "plotly"), repos = "http://cran.us.r-project.org")'
-  - git clone --depth 1 --single-branch --branch https://github.com/rgcca-factory/RGCCA.git
+  - git clone --depth 1 --single-branch --branch $TOOL_VERSION https://github.com/rgcca-factory/$TOOL_NAME
   - cd ${TRAVIS_BUILD_DIR}/${TOOL_NAME}
   - git checkout ${TOOL_VERSION}
   - cd ${TRAVIS_BUILD_DIR}
   - R CMD build --no-build-vignettes ${TOOL_NAME}
   - R -e "install.packages('"${TOOL_NAME}_${TOOL_VERSION}".tar.gz'"", repos = NULL, type = 'source')"
-  # - cp -r ${TRAVIS_BUILD_DIR}/RGCCA/R ${TRAVIS_BUILD_DIR}/R
   - mv ${TRAVIS_BUILD_DIR}/${TOOL_NAME}/inst/launcher.R ${TRAVIS_BUILD_DIR}/launcher.R
 
 script:
