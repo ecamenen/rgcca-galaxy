@@ -22,7 +22,7 @@ before_install:
 
 install:
   - conda activate test
-  - conda install r-base r-gridextra r-deriv r-mass r-ggplot2 r-optparse r-scales r-igraph r-pbapply r-plotly git
+  - conda install r-base r-gridextra r-deriv r-mass r-ggplot2 r-optparse r-scales r-igraph r-pbapply r-plotly
   - git clone --depth 1 --single-branch --branch $TOOL_VERSION https://github.com/rgcca-factory/$TOOL_NAME ${CONDA_PREFIX}/${TOOL_NAME}
   - cd ${CONDA_PREFIX}/${TOOL_NAME}
   - git checkout ${CONDA_PREFIX}/${TOOL_VERSION}
