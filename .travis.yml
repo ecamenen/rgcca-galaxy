@@ -6,9 +6,8 @@ env:
     - TOOL_NAME=RGCCA
 
 before_install:
-  - sudo apt-get install -y python-virtualenv
-  - virtualenv planemo-venv
-  - . planemo-venv/bin/activate
+  - virtualenv .venv; . .venv/bin/activate
+  - pip install "pip>=7"
   - pip install planemo
   - planemo conda_init
 
