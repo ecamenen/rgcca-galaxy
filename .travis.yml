@@ -17,7 +17,7 @@ install:
   - planemo conda_install ${TRAVIS_BUILD_DIR}
   - sudo apt-get install -y libxml2-dev libcurl4-openssl-dev libssl-dev liblapack-dev r-base
   - sudo chmod 777 -R /usr/local/lib/R/site-library
-  - Rscript -e 'install.packages(c("parallel", "pbapply", "grDevices", "ggplot2", "optparse", "scales", "igraph", "gridExtra", "Deriv", "openxlsx", "devtools", "rmarkdown", "pander", "ggrepel", "plotly", "visNetwork"), repos = "http://cran.us.r-project.org")' && \
+  - Rscript -e 'install.packages(c("parallel", "pbapply", "grDevices", "ggplot2", "optparse", "scales", "igraph", "gridExtra", "Deriv", "openxlsx", "devtools", "rmarkdown", "pander", "ggrepel", "plotly", "visNetwork"), repos = "http://cran.us.r-project.org")'
   - R -e 'devtools::install_github("rgcca-factory/'${TOOL_NAME}'", ref = "'${TOOL_VERSION}'")'
   - git clone --depth 1 --single-branch --branch https://github.com/rgcca-factory/RGCCA.git
   - cd ${TRAVIS_BUILD_DIR}/${TOOL_NAME}
