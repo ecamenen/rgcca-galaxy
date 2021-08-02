@@ -1,4 +1,4 @@
-<tool id="rgcca" name="RGCCA" version="@TOOL_VERSION@+galaxy0">
+<tool id="rgcca" name="RGCCA" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@">
 
     <description>performs multiblock data analysis of several sets of variables (blocks) observed on the same group of individuals.</description>
 
@@ -18,47 +18,64 @@
 
     <requirements>
         <requirement type="package" version="@TOOL_VERSION@">rgccacmd</requirement>
+        <requirement type="package" version="4.1">r-base</requirement>
     </requirements>
 
-    <stdio>
-        <exit_code range="1:" level="fatal" />
-    </stdio>
-
-    <command ><![CDATA[
-        #set $data_paths = $block_1.file_name
-        #set $data_names = $block_1.name
-        #for $i, $s in enumerate( $dataset )
-            #set $data_paths += ',' + $s.block_n.file_name
-            #set $data_names += ',' + $s.block_n.name
-        #end for
-        Rscript $__tool_directory__/launcher.R
+    <command detect_errors="exit_code"><![CDATA[
+        #set data_paths = ",".join([str(_.file_name) for _ in $blocks])
+        #set data_names = ",".join([str(_.element_identifier).replace(',', '_') for _ in $blocks])
+        #set out_files = str($output_selector).split(",")
+        Rscript '$__tool_directory__/launcher.R'
             --datasets '${data_paths}'
             --names '${data_names}'
-            --o1 '$individual_plot' --o2 '$corcircle' --o3 '$top_variables' --o4 '$ave' --o5 '$design' --o6 '$individual_table' --o7 '$variable_table' --o8 '$r_results'
+            #if 'individuals' in $out_files
+                --o1 '$individual_plot'
+            #end if
+            #if 'corcircle' in $out_files
+                --o2 '$corcircle'
+            #end if
+            #if 'top_variables' in $out_files
+                --o3 '$top_variables'
+            #end if
+            #if 'ave' in $out_files
+                --o4 '$ave'
+            #end if
+            #if 'design' in $out_files
+                --o5 '$design'
+            #end if
+            #if 'individual_table' in $out_files
+                --o6 '$individual_table'
+            #end if
+            #if 'variable_table' in $out_files
+                --o7 '$variable_table'
+            #end if
+            #if 'rdata' in $out_files
+                --o8 '$rdata'
+            #end if
             $parse.header
             --separator $parse.separator
             $analyse.superblock
             $analyse.scale
             #if $analyse.tau.bool == 'false'
-            --penalty $analyse.tau.value
+                --penalty $analyse.tau.value
             #else
-            --penalty $analyse.tau.bool
+                --penalty $analyse.tau.bool
             #end if
             --ncomp $analyse.ncomp
             --scheme $analyse.scheme
             #if $analyse.method.family == '1'
-            --type pca
+                --type pca
             #else
-            --type $analyse.method.type
+                --type $analyse.method.type
             #end if
             #if $analyse.connection
-            --connection $analyse.connection
+                --connection $analyse.connection
             #end if
             #if $analyse.supervised.learning_mode == 'supervised'
-            --response $analyse.supervised.block_response
+                --response $analyse.supervised.block_response
             #end if
             #if $graphic.response
-            --group $graphic.response
+                --group $graphic.response
             #end if
             --compx $graphic.compx
             --compy $graphic.compy
@@ -69,12 +86,8 @@
     ]]></command>
 
     <inputs>
-        <param name="block_1" type="data" format="tsv,tabular,txt,csv" label="Load a block"
-            help="CSV file containing a matrix with: (i) quantitative values only (decimal should be separated by '.'), (ii) the samples in lines (should be labelled in the 1rst column) and (iii) variables in columns (should have a header)."/>
-        <repeat name="dataset" title="New block"
-            help="Additional block with a different structure than the first one. Each block will be analysed separately.">
-            <param name="block_n" type="data" format="tsv,tabular,txt,csv" label="Dataset"/>
-        </repeat>
+        <param name="blocks" type="data" format="tsv,tabular,txt,csv" multiple="true" optional="false" label = "Load blocks"
+            help="TSV file containing a matrix with: (i) quantitative values only (decimal should be separated by '.'), (ii) the samples in lines (should be labelled in the 1rst column) and (iii) variables in columns (should have a header)."/>
 
         <section name="parse" title="Advanced parsing" help="By default, on tabulated files with a header.">
             <param name="header" type="boolean" truevalue="" falsevalue="-H" checked="true" label="Consider the first row as header of columns" help="Used for both blocks and color files."/>
@@ -139,7 +152,7 @@
             </conditional>
 
             <param name="connection" optional="true" type="data" format="tsv,tabular,txt,csv" label="Load the design matrix (if superblock or supervised disabled)"
-                help="CSV file without header and without row names. This file describes the connections between the blocks. It should contain 1 (if two blocks are related) or 0 values otherwise. The columns are separated by tabulations. It is a symmetric matrix with the same dimension as the number of blocks."/>
+                help="TSV file without header and without row names. This file describes the connections between the blocks. It should contain 1 (if two blocks are related) or 0 values otherwise. The columns are separated by tabulations. It is a symmetric matrix with the same dimension as the number of blocks."/>
 
             <param name="superblock" type="boolean" truevalue="" falsevalue="--superblock" checked="true" label="Use a superblock"
                 help="A block defined as the concatenation of all the other blocks. The space spanned by global components is viewed as a compromise space that integrated all the modalities and facilitates the visualization of the results and their interpretation. If disabled, all blocks are assumed to be connected or a connection file could be used."/>
@@ -150,14 +163,17 @@
                     <option value="supervised">Supervised</option>
                 </param>
                 <when value="supervised">
-                    <param name="block_response" type="integer" value="0" min="0" max="10" label="Use a block as response (supervised analysis)" help="@BLOCK_RULES@"/>
+                    <param name="block_response" type="integer" value="1" min="1" max="10" label="Use a block as response (supervised analysis)" help="@BLOCK_RULES@ By default, the first block is selected."/>
                 </when>
                 <when value="unsupervised"/>
             </conditional>
 
             <conditional name="tau">
-                <param name="bool" type="boolean" truevalue="optimal" falsevalue="false" checked="false" label="Use an optimal tau"
-                    help="For RGCCA, a regularization parameter for each block (i.e., tau) [default: 1]. Tau varies from 0 (maximizing the correlation) to 1 (maximizing the covariance). For SGCCA, tau is automatically set to 1 and a shrinkage parameter can be defined instead for automatic variable selection, varying from the square root of the variable number (the fewest selected variables) to 1 (all the variables are included)."/>
+                <param name="bool" type="select" display="radio" label="Tau selection"
+                    help="For RGCCA, a regularization parameter for each block (i.e., tau) [default: 1]. Tau varies from 0 (maximizing the correlation) to 1 (maximizing the covariance). For SGCCA, tau is automatically set to 1 and a shrinkage parameter can be defined instead for automatic variable selection, varying from the square root of the variable number (the fewest selected variables) to 1 (all the variables are included).">
+                    <option value="false">Manual</option>
+                    <option value="optimal">Optimal</option>
+                </param>
                 <when value="false">
                     <param name="value" type="float" label=" " value="1" min="0" max="1"/>
                 </when>
@@ -177,37 +193,64 @@ negative correlation. The factorial scheme discriminates more strongly the block
 
         <section name="graphic" title="Advanced graphic" help="By default, the x-axis and y-axis are respectively the first and the second components, the number of top variables is 100 and a superblock is used.">
             <param name="response" optional="true" type="data" format="tsv,tabular,txt,csv" label="Color the individual plot with a response variable"
-                help="A CSV file containing either: (i) an only column with a qualitative or a quantitative variable; (ii) multiple columns corresponding to a disjunctive table."/>
+                help="A TSV file containing either: (i) an only column with a qualitative or a quantitative variable; (ii) multiple columns corresponding to a disjunctive table."/>
             <param name="text" type="boolean" truevalue="" falsevalue="--text" checked="true" label="Display the names of the points (in biplots)"/>
             <param name="compx" type="integer" label="Component for the X-axis" help="The component used in the X-axis for biplots and the only component used for top variable plot. @COMP_RULES@" value="1" min="1" max="5"/>
             <param name="compy" type="integer" label="Component for the Y-axis" help="The component used in the Y-axis for biplots. @COMP_RULES@" value="2" min="1" max="5"/>
             <param name="blockx" type="integer" value="0" min="0" max="10" label="Visualise this block" help="Block used in the X-axis for individual plot and the only block used for corcircle and top variable plots. @BLOCK_RULES@"/>
-            <param name="blocky" type="integer" value="0" min="0" max="10" label="Visualise this block for the Y-axis (in individual plot)" help="@BLOCK_RULES@"/>
+            <param name="blocky" type="integer" value="0" min="0" max="10" label="Visualise this block for the Y-axis (in individual plot)" help="0 corresponds to the superblock (or the last block loaded), @BLOCK_RULES@ By default, the superblock is selected."/>
             <param name="nmark" type="integer" label="Number of top variables" value="100" min="10" max="300"/>
         </section>
 
+        <param name="output_selector" type="select" multiple="true" label="Outputs">
+            <option value="individuals" selected="true">Individual plot</option>
+            <option value="corcircle" selected = "true">Corcircle plot</option>
+            <option value="top_variables">Top variables plot</option>
+            <option value="ave">Explained variance plot</option>
+            <option value="design">Design plot</option>
+            <option value="individual_table" selected="true">Individual table</option>
+            <option value="variable_table" selected="true">Variable table</option>
+            <option value="rdata">RData file</option>
+        </param>
     </inputs>
 
     <outputs>
-        <data name="individual_plot" label="individuals.pdf" format="pdf"/>
-        <data name="corcircle" label="corcircle.pdf" format="pdf"/>
-        <data name="top_variables"  label="top_variables.pdf" format="pdf"/>
-        <data name="ave"  label="ave.pdf" format="pdf"/>
-        <data name="design"  label="design.pdf" format="pdf"/>
-        <data name="individual_table"  label="individuals.tsv" format="tsv"/>
-        <data name="variable_table"  label="variables.tsv" format="tsv"/>
-        <data name="r_results"  label="rgcca.result.RData" format="rdata"/>
+        <data name="individual_plot" label="${tool.name} on ${on_string}: individuals.pdf" format="pdf">
+            <filter>"individuals" in output_selector</filter>
+        </data>
+        <data name="corcircle" label="${tool.name} on ${on_string}: corcircle.pdf" format="pdf">
+            <filter>"corcircle" in output_selector</filter>
+        </data>
+        <data name="top_variables"  label="${tool.name} on ${on_string}: top_variables.pdf" format="pdf">
+            <filter>"top_variables" in output_selector</filter>
+        </data>
+        <data name="ave"  label="${tool.name} on ${on_string}: ave.pdf" format="pdf">
+            <filter>"ave" in output_selector</filter>
+        </data>
+        <data name="design"  label="${tool.name} on ${on_string}: design.pdf" format="pdf">
+            <filter>"design" in output_selector</filter>
+        </data>
+        <data name="individual_table"  label="${tool.name} on ${on_string}: individuals.tsv" format="tsv">
+            <filter>"individual_table" in output_selector</filter>
+        </data>
+        <data name="variable_table"  label="${tool.name} on ${on_string}: variables.tsv" format="tsv">
+            <filter>"variable_table" in output_selector</filter>
+        </data>
+        <data name="rdata"  label="${tool.name} on ${on_string}: rgcca.result.RData" format="rdata">
+            <filter>"rdata" in output_selector</filter>
+        </data>
     </outputs>
 
     <tests>
 
         <test expect_num_outputs="8" expect_exit_code="0">
             <expand macro="output_tests" path="1block"/>
+            <param name="blocks" value="agriculture.tsv" ftype = "tsv"/>
             <output name="individual_table">
                 <assert_contents>
                     <has_n_columns n="4"/>
                     <has_line_matching
-                            expression='"agriculture.axis1"\s"agriculture.axis2"\s"superblock.axis1"\s"superblock.axis2"'/>
+                            expression='"agriculture.component1"\s"agriculture.component2"\s"superblock.component1"\s"superblock.component2"'/>
                     <has_line_matching
                             expression='^.+(\s\-?\d+.\d+){4}$'/>
                 </assert_contents>
@@ -218,7 +261,7 @@ negative correlation. The factorial scheme discriminates more strongly the block
             <expand macro="output_tests" path="3blocks_connection"/>
             <expand macro="output_tests_3blocks"/>
             <section name="analyse">
-                <param name="connection" value="connection.tsv"/>
+                <param name="connection" value="connection.tsv" ftype = "tsv"/>
                 <param name="superblock" value="false"/>
             </section>
             <assert_command>
@@ -263,10 +306,8 @@ negative correlation. The factorial scheme discriminates more strongly the block
         </test>
 
         <test expect_num_outputs="8" expect_exit_code="0">
-            <expand macro="output_tests" path="2blocks" compx="3" compy="1"/>
-            <repeat name="dataset">
-                <param name="block_n" value="politic.tsv"/>
-            </repeat>
+            <expand macro="output_tests" path="2blocks"/>
+            <param name="blocks" value="agriculture.tsv,politic.tsv"/>
             <section name="analyse">
                 <param name="scale" value="false"/>
                 <conditional name="tau">
@@ -281,7 +322,7 @@ negative correlation. The factorial scheme discriminates more strongly the block
                 </conditional>
             </section>
             <section name="graphic">
-                <param name="response" value="political_system.tsv"/>
+                <param name="response" value="political_system.tsv" ftype = "tsv"/>
                 <param name="text" value="false"/>
                 <param name="compx" value="3"/>
                 <param name="compy" value="1"/>
@@ -308,11 +349,12 @@ Etienne CAMENEN
 
 
 **Contact:**
-arthur.tenenhaus@centralesupelec.fr
+etienne.camenen@gmail.com
 
 
 **R package:**
-The RGCCA package is available from the CRAN repository (https://cran.r-project.org/web/packages/RGCCA).
+    | The RGCCA package is available from the CRAN repository (v2.1.2; https://cran.r-project.org/web/packages/RGCCA).
+    | This tool is based on a version available on github (v3.0; https://github.com/rgcca-factory/RGCCA).
 
 ---------------------------------------------------
 
@@ -324,14 +366,14 @@ A user-friendly multi-blocks analysis (Regularized Generalized Canonical Correla
 
 **Working example**
 
-    | From Russett data (RGCCA package): https://github.com/rgcca-factory/RGCCA/tree/master/inst/extdata
-    | Use *agriculture.tsv* as a block. Add *industry.tsv* and *politic.tsv* as new blocks. *connection.tsv* could be used as a design matrix and *political_system.tsv* as a response variable respectively in analysis and graphic settings.
+    | From Russett data (RGCCA package): https://github.com/BrainAndSpineInstitute/rgcca_ui/tree/master/inst/extdata
+    | Use *agriculture.tsv* as a block. Add *industry.tsv* and *politic.tsv* for multiblock analysis. *connection.tsv* could be used as a design matrix and *political_system.tsv* as a response variable respectively in analysis and graphic settings.
 
 **Documentation**
 
 - RGCCA: https://cran.r-project.org/web/packages/RGCCA/vignettes/vignette_RGCCA.pdf
-- accepted input / output formats: https://github.com/rgcca-factory/RGCCA#input-files
-- tutorial: https://github.com/BrainAndSpineInstitute/rgcca_galaxy#tutorial-rgcca-galaxy-tool
+- accepted input / https://github.com/BrainAndSpineInstitute/rgcca_ui#input-files
+- tutorial: https://github.com/BrainAndSpineInstitute/rgcca_galaxy#readme
 
 </help>
 
